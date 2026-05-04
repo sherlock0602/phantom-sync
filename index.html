@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幻影同步：巨大化穿牆版 🌱</title>
+    <title>幻影同步：完美穿牆版 🌱</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -77,7 +77,7 @@
     <div class="float-text" id="float-text">PERFECT!</div>
 
     <div class="glass-panel" id="game-ui">
-        <div class="ui-header"><span>🌱</span> HOLE IN THE WALL</div>
+        <div class="ui-header"><span>🌱</span> 完美穿牆挑戰</div>
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
             <div>
                 <div class="ui-label">STAGE</div>
@@ -103,7 +103,7 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">巨大化地板挑戰版</span></div>
+        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">完美穿牆 2.0 版</span></div>
         <button class="start-btn" onclick="startGame()">LINK START</button>
     </div>
 
@@ -139,35 +139,32 @@
     let timeLeft = 6000; 
     let timerInterval;
 
-    // 🌟 【神級系統升級】
-    // POSE_SCALE = 2.5：將所有動作放大 2.5 倍！
-    // 透過統一的基底比例，讓玩家的全身能輕易放進去
-    const POSE_SCALE = 2.5; 
-    const BASE_R = 35; // 基礎泡泡半徑 (放大後將近 90px)
-
-    // 20 套全地板動作！腳永遠在 y=160 (站姿) 或 y=120 (深蹲)
-    // 參數說明：lh(左手), rh(右手), lf(左腳), rf(右腳)，以腰部為 0,0 點
+    // 🌟 核心參數設定
+    const POSE_SCALE = 2.0; // 完美的 2 倍黃金比例
+    
+    // 20 套純地板動作！我們用最簡單的 [x, y] 向量來表示四肢伸展的方向
+    // 以中心腰部為起點，手腳延伸出去
     const poses = [
-        { name: "勝利大 V 字 ✌️", zones: { lh: {x: -80, y: -130, r: BASE_R, id: 15}, rh: {x: 80, y: -130, r: BASE_R, id: 16}, lf: {x: -40, y: 160, r: BASE_R, id: 27}, rf: {x: 40, y: 160, r: BASE_R, id: 28} } },
-        { name: "十字平舉 ✝️", zones: { lh: {x: -110, y: -60, r: BASE_R, id: 15}, rh: {x: 110, y: -60, r: BASE_R, id: 16}, lf: {x: -20, y: 160, r: BASE_R, id: 27}, rf: {x: 20, y: 160, r: BASE_R, id: 28} } },
-        { name: "大字爆開 🌟", zones: { lh: {x: -120, y: -100, r: BASE_R, id: 15}, rh: {x: 120, y: -100, r: BASE_R, id: 16}, lf: {x: -70, y: 160, r: BASE_R, id: 27}, rf: {x: 70, y: 160, r: BASE_R, id: 28} } },
-        { name: "投降姿勢 ✋🤚", zones: { lh: {x: -60, y: -120, r: BASE_R, id: 15}, rh: {x: 60, y: -120, r: BASE_R, id: 16}, lf: {x: -40, y: 160, r: BASE_R, id: 27}, rf: {x: 40, y: 160, r: BASE_R, id: 28} } },
-        { name: "右手高舉 🙋‍♂️", zones: { lh: {x: -60, y: 0, r: BASE_R, id: 15}, rh: {x: 50, y: -130, r: BASE_R, id: 16}, lf: {x: -40, y: 160, r: BASE_R, id: 27}, rf: {x: 40, y: 160, r: BASE_R, id: 28} } },
-        { name: "左手高舉 🙋‍♀️", zones: { lh: {x: -50, y: -130, r: BASE_R, id: 15}, rh: {x: 60, y: 0, r: BASE_R, id: 16}, lf: {x: -40, y: 160, r: BASE_R, id: 27}, rf: {x: 40, y: 160, r: BASE_R, id: 28} } },
-        { name: "雙手叉腰 😠", zones: { lh: {x: -45, y: 0, r: BASE_R, id: 15}, rh: {x: 45, y: 0, r: BASE_R, id: 16}, lf: {x: -20, y: 160, r: BASE_R, id: 27}, rf: {x: 20, y: 160, r: BASE_R, id: 28} } },
-        { name: "週末夜狂熱 🕺", zones: { lh: {x: -70, y: -130, r: BASE_R, id: 15}, rh: {x: 70, y: 10, r: BASE_R, id: 16}, lf: {x: -50, y: 160, r: BASE_R, id: 27}, rf: {x: 50, y: 160, r: BASE_R, id: 28} } },
-        { name: "週末夜狂熱(反) 💃", zones: { lh: {x: -70, y: 10, r: BASE_R, id: 15}, rh: {x: 70, y: -130, r: BASE_R, id: 16}, lf: {x: -50, y: 160, r: BASE_R, id: 27}, rf: {x: 50, y: 160, r: BASE_R, id: 28} } },
-        { name: "殭屍平舉 🧟", zones: { lh: {x: -40, y: -60, r: BASE_R, id: 15}, rh: {x: 40, y: -60, r: BASE_R, id: 16}, lf: {x: -30, y: 160, r: BASE_R, id: 27}, rf: {x: 30, y: 160, r: BASE_R, id: 28} } },
-        { name: "深蹲警戒 🏋️", zones: { lh: {x: -50, y: -40, r: BASE_R, id: 15}, rh: {x: 50, y: -40, r: BASE_R, id: 16}, lf: {x: -60, y: 110, r: BASE_R, id: 27}, rf: {x: 60, y: 110, r: BASE_R, id: 28} } },
-        { name: "相撲選手 🤼", zones: { lh: {x: -80, y: 0, r: BASE_R, id: 15}, rh: {x: 80, y: 0, r: BASE_R, id: 16}, lf: {x: -90, y: 110, r: BASE_R, id: 27}, rf: {x: 90, y: 110, r: BASE_R, id: 28} } },
-        { name: "神聖祈禱 🙏", zones: { lh: {x: -15, y: -50, r: BASE_R, id: 15}, rh: {x: 15, y: -50, r: BASE_R, id: 16}, lf: {x: -20, y: 160, r: BASE_R, id: 27}, rf: {x: 20, y: 160, r: BASE_R, id: 28} } },
-        { name: "交叉防禦(下) 🛡️", zones: { lh: {x: -15, y: 20, r: BASE_R, id: 15}, rh: {x: 15, y: 20, r: BASE_R, id: 16}, lf: {x: -50, y: 160, r: BASE_R, id: 27}, rf: {x: 50, y: 160, r: BASE_R, id: 28} } },
-        { name: "交叉防禦(上) 🙅‍♂️", zones: { lh: {x: -20, y: -120, r: BASE_R, id: 15}, rh: {x: 20, y: -120, r: BASE_R, id: 16}, lf: {x: -40, y: 160, r: BASE_R, id: 27}, rf: {x: 40, y: 160, r: BASE_R, id: 28} } },
-        { name: "健美先生 💪", zones: { lh: {x: -90, y: -80, r: BASE_R, id: 15}, rh: {x: 90, y: -80, r: BASE_R, id: 16}, lf: {x: -40, y: 160, r: BASE_R, id: 27}, rf: {x: 40, y: 160, r: BASE_R, id: 28} } },
-        { name: "芭蕾天鵝 🦢", zones: { lh: {x: -10, y: -140, r: BASE_R, id: 15}, rh: {x: 10, y: -140, r: BASE_R, id: 16}, lf: {x: -20, y: 160, r: BASE_R, id: 27}, rf: {x: 20, y: 160, r: BASE_R, id: 28} } },
-        { name: "摸頭殺 🤦", zones: { lh: {x: -30, y: -100, r: BASE_R, id: 15}, rh: {x: 30, y: -100, r: BASE_R, id: 16}, lf: {x: -40, y: 160, r: BASE_R, id: 27}, rf: {x: 40, y: 160, r: BASE_R, id: 28} } },
-        { name: "側身伸展 🤸", zones: { lh: {x: 0, y: -130, r: BASE_R, id: 15}, rh: {x: 50, y: 0, r: BASE_R, id: 16}, lf: {x: -50, y: 160, r: BASE_R, id: 27}, rf: {x: 30, y: 160, r: BASE_R, id: 28} } },
-        { name: "雙手托天 ☁️", zones: { lh: {x: -40, y: -140, r: BASE_R, id: 15}, rh: {x: 40, y: -140, r: BASE_R, id: 16}, lf: {x: -30, y: 160, r: BASE_R, id: 27}, rf: {x: 30, y: 160, r: BASE_R, id: 28} } }
+        { name: "勝利大 V 字 ✌️", lh: [-80, -130], rh: [80, -130], lf: [-40, 160], rf: [40, 160] },
+        { name: "十字平舉 ✝️", lh: [-110, -50], rh: [110, -50], lf: [-20, 160], rf: [20, 160] },
+        { name: "大字爆開 🌟", lh: [-120, -100], rh: [120, -100], lf: [-70, 160], rf: [70, 160] },
+        { name: "投降姿勢 ✋🤚", lh: [-60, -120], rh: [60, -120], lf: [-40, 160], rf: [40, 160] },
+        { name: "右手高舉 🙋‍♂️", lh: [-60, 0], rh: [50, -130], lf: [-40, 160], rf: [40, 160] },
+        { name: "左手高舉 🙋‍♀️", lh: [-50, -130], rh: [60, 0], lf: [-40, 160], rf: [40, 160] },
+        { name: "雙手叉腰 😠", lh: [-45, 0], rh: [45, 0], lf: [-20, 160], rf: [20, 160] },
+        { name: "週末夜狂熱 🕺", lh: [-70, -130], rh: [70, 10], lf: [-50, 160], rf: [50, 160] },
+        { name: "週末夜狂熱(反) 💃", lh: [-70, 10], rh: [70, -130], lf: [-50, 160], rf: [50, 160] },
+        { name: "殭屍平舉 🧟", lh: [-40, -60], rh: [40, -60], lf: [-30, 160], rf: [30, 160] },
+        { name: "深蹲警戒 🏋️", lh: [-50, -40], rh: [50, -40], lf: [-60, 110], rf: [60, 110] },
+        { name: "相撲選手 🤼", lh: [-80, 0], rh: [80, 0], lf: [-90, 110], rf: [90, 110] },
+        { name: "神聖祈禱 🙏", lh: [-15, -50], rh: [15, -50], lf: [-20, 160], rf: [20, 160] },
+        { name: "交叉防禦(下) 🛡️", lh: [-15, 20], rh: [15, 20], lf: [-50, 160], rf: [50, 160] },
+        { name: "交叉防禦(上) 🙅‍♂️", lh: [-20, -120], rh: [20, -120], lf: [-40, 160], rf: [40, 160] },
+        { name: "健美先生 💪", lh: [-90, -80], rh: [90, -80], lf: [-40, 160], rf: [40, 160] },
+        { name: "芭蕾天鵝 🦢", lh: [-10, -140], rh: [10, -140], lf: [-20, 160], rf: [20, 160] },
+        { name: "摸頭殺 🤦", lh: [-30, -100], rh: [30, -100], lf: [-40, 160], rf: [40, 160] },
+        { name: "側身伸展 🤸", lh: [0, -130], rh: [50, 0], lf: [-50, 160], rf: [30, 160] },
+        { name: "雙手托天 ☁️", lh: [-40, -140], rh: [40, -140], lf: [-30, 160], rf: [30, 160] }
     ];
 
     let currentPoseData = null;
@@ -190,7 +187,7 @@
         poseNameDisplay.innerText = currentPoseData.name;
         
         currentHitStatus = { lh: false, rh: false, lf: false, rf: false };
-        syncStatus.innerText = "把手腳塞進泡泡裡！";
+        syncStatus.innerText = "將四肢伸進剪影中！";
         syncStatus.style.color = "white";
         uiPanel.style.borderColor = "rgba(255, 255, 255, 0.15)";
         uiPanel.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.5)";
@@ -255,83 +252,95 @@
         document.getElementById('result-text').innerHTML = `TRAINING COMPLETE<br><br><span style="font-size: 32px; color: #a0aec0;">最終得分</span><br><span style="font-size: 80px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.8);">${totalScore}</span><br><br><span style="font-size: 24px;">${rank}</span>`;
     }
 
-    // 🌟 放大 2.5 倍的巨型全息剪影渲染
+    // 🌟 全新「積木拼圖式」渲染：當肢體進入範圍，該段剪影就會亮起綠光！
     function drawSolidSilhouette(ctx, cx, waistY, poseData, hitStatus) {
         if (!poseData) return;
         ctx.save();
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         
-        let allHit = hitStatus.lh && hitStatus.rh && hitStatus.lf && hitStatus.rf;
-        const bodyColor = allHit ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 240, 255, 0.4)';
-        
-        ctx.shadowColor = allHit ? '#00ff88' : '#00f0ff';
-        ctx.shadowBlur = 20;
+        const armStartY = waistY - 50 * POSE_SCALE;
+        const legStartY = waistY + 20 * POSE_SCALE;
 
-        // 畫出「巨大化」的人體主幹
+        // 繪製身體中柱 (永遠是藍色發光)
         ctx.beginPath();
-        ctx.arc(cx, waistY - 90 * POSE_SCALE, 35 * POSE_SCALE, 0, Math.PI*2); // 頭
-        ctx.moveTo(cx, waistY - 50 * POSE_SCALE); ctx.lineTo(cx, waistY + 20 * POSE_SCALE); // 身體主幹
-        
-        // 連接四肢 (乘上 POSE_SCALE 放大座標)
-        ctx.moveTo(cx, waistY - 50 * POSE_SCALE); ctx.lineTo(cx + poseData.zones.lh.x * POSE_SCALE, waistY + poseData.zones.lh.y * POSE_SCALE); // 左手
-        ctx.moveTo(cx, waistY - 50 * POSE_SCALE); ctx.lineTo(cx + poseData.zones.rh.x * POSE_SCALE, waistY + poseData.zones.rh.y * POSE_SCALE); // 右手
-        ctx.moveTo(cx, waistY + 20 * POSE_SCALE); ctx.lineTo(cx + poseData.zones.lf.x * POSE_SCALE, waistY + poseData.zones.lf.y * POSE_SCALE); // 左腳
-        ctx.moveTo(cx, waistY + 20 * POSE_SCALE); ctx.lineTo(cx + poseData.zones.rf.x * POSE_SCALE, waistY + poseData.zones.rf.y * POSE_SCALE); // 右腳
-        
-        // 粗度也按比例放大，視覺超震撼
-        ctx.lineWidth = 45 * POSE_SCALE; 
-        ctx.strokeStyle = bodyColor;
+        ctx.arc(cx, waistY - 90 * POSE_SCALE, 35 * POSE_SCALE, 0, Math.PI*2); // 頭部
+        ctx.moveTo(cx, armStartY); ctx.lineTo(cx, legStartY); // 軀幹
+        ctx.lineWidth = 70 * POSE_SCALE; 
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 20;
         ctx.stroke();
 
-        ctx.lineWidth = 10;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.stroke();
-
-        // 畫出放大的判定泡泡
-        const keys = ['lh', 'rh', 'lf', 'rf'];
-        keys.forEach(k => {
-            const z = poseData.zones[k];
-            const isHit = hitStatus[k];
-            const scaledR = z.r * POSE_SCALE; // 泡泡也巨大化
-            
+        // 專屬畫四肢的副程式
+        const drawLimb = (startX, startY, endX, endY, isHit) => {
             ctx.beginPath();
-            ctx.arc(cx + z.x * POSE_SCALE, waistY + z.y * POSE_SCALE, scaledR, 0, Math.PI*2);
-            ctx.fillStyle = isHit ? 'rgba(0, 255, 136, 0.6)' : 'rgba(255, 255, 0, 0.2)';
-            ctx.fill();
-            
-            ctx.lineWidth = 6;
-            ctx.strokeStyle = isHit ? '#00ff88' : '#ffff00';
-            ctx.setLineDash([15, 15]);
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            // 只要命中，該段肢體就變成高亮綠色！
+            ctx.strokeStyle = isHit ? 'rgba(0, 255, 136, 0.7)' : 'rgba(0, 240, 255, 0.4)';
+            ctx.shadowColor = isHit ? '#00ff88' : '#00f0ff';
             ctx.stroke();
-            ctx.setLineDash([]);
-        });
+            
+            // 內部的白色裝甲線
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.shadowColor = 'transparent';
+            ctx.stroke();
+            ctx.lineWidth = 70 * POSE_SCALE; // 恢復粗度
+        };
+
+        ctx.lineWidth = 70 * POSE_SCALE;
+        // 畫出四肢，並根據 hitStatus 決定顏色
+        drawLimb(cx, armStartY, cx + poseData.lh[0]*POSE_SCALE, waistY + poseData.lh[1]*POSE_SCALE, hitStatus.lh);
+        drawLimb(cx, armStartY, cx + poseData.rh[0]*POSE_SCALE, waistY + poseData.rh[1]*POSE_SCALE, hitStatus.rh);
+        drawLimb(cx, legStartY, cx + poseData.lf[0]*POSE_SCALE, waistY + poseData.lf[1]*POSE_SCALE, hitStatus.lf);
+        drawLimb(cx, legStartY, cx + poseData.rf[0]*POSE_SCALE, waistY + poseData.rf[1]*POSE_SCALE, hitStatus.rf);
+
         ctx.restore();
     }
 
-    // 更新巨大化後的命中判定
+    // 🌟 核心數學：計算點到線段的最短距離 (真正的穿牆判定！)
+    function distToSegmentSquared(p, v, w) {
+        var l2 = (v.x - w.x)*(v.x - w.x) + (v.y - w.y)*(v.y - w.y);
+        if (l2 == 0) return (p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y);
+        var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        return (p.x - (v.x + t * (w.x - v.x)))*(p.x - (v.x + t * (w.x - v.x))) +
+               (p.y - (v.y + t * (w.y - v.y)))*(p.y - (v.y + t * (w.y - v.y)));
+    }
+    function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
+
+    // 🌟 更新命中狀態：只要玩家的手腳「距離剪影中心線的距離 <= 寬容度」，就算人在剪影裡面！
     function updateHitStatus(landmarks, poseData, cx, waistY, w, h) {
         if (!poseData || !landmarks) return { lh: false, rh: false, lf: false, rf: false };
         let status = { lh: false, rh: false, lf: false, rf: false };
         
-        const keys = ['lh', 'rh', 'lf', 'rf'];
-        keys.forEach(k => {
-            const z = poseData.zones[k];
-            const lm = landmarks[z.id];
-            if (lm) {
-                const px = lm.x * w; 
-                const py = lm.y * h;
-                
-                // 乘上 POSE_SCALE 比對真實畫面像素
-                const targetX = cx + z.x * POSE_SCALE;
-                const targetY = waistY + z.y * POSE_SCALE;
-                const targetR = z.r * POSE_SCALE;
-                
-                const dist = Math.hypot(px - targetX, py - targetY);
-                if (dist <= targetR) {
-                    status[k] = true; 
-                }
-            }
-        });
+        // 寬容半徑！因為粗度是 70*2 = 140，半徑 70。我再給多一點點寬容度到 90。
+        // 這樣不管手短手長，只要揮在對的方向線上就能命中！
+        const THRESHOLD = 90 * POSE_SCALE; 
+        
+        const armStartY = waistY - 50 * POSE_SCALE;
+        const legStartY = waistY + 20 * POSE_SCALE;
+
+        const checkLimb = (lmId, startX, startY, endX, endY) => {
+            const lm = landmarks[lmId];
+            if(!lm) return false;
+            const p = {x: lm.x * w, y: lm.y * h};
+            const v = {x: startX, y: startY};
+            const targetW = {x: endX, y: endY};
+            // 計算玩家關節與剪影線段的最短距離
+            return distToSegment(p, v, targetW) <= THRESHOLD;
+        }
+
+        // 偵測 15(左手腕), 16(右手腕), 27(左腳踝), 28(右腳踝)
+        status.lh = checkLimb(15, cx, armStartY, cx + poseData.lh[0]*POSE_SCALE, waistY + poseData.lh[1]*POSE_SCALE);
+        status.rh = checkLimb(16, cx, armStartY, cx + poseData.rh[0]*POSE_SCALE, waistY + poseData.rh[1]*POSE_SCALE);
+        status.lf = checkLimb(27, cx, legStartY, cx + poseData.lf[0]*POSE_SCALE, waistY + poseData.lf[1]*POSE_SCALE);
+        status.rf = checkLimb(28, cx, legStartY, cx + poseData.rf[0]*POSE_SCALE, waistY + poseData.rf[1]*POSE_SCALE);
+
         return status;
     }
 
@@ -342,8 +351,7 @@
         const h = canvasElement.height;
         const cx = w / 2;
         
-        // 🌟 【完美貼地錨點】
-        // 我們將腰部位置(waistY) 往下移動，讓腳(Y=160) 乘上放大倍率後，剛好踩在螢幕底端往上 20px 處！
+        // 貼地錨點，腳永遠切齊螢幕底端往上 20px
         const waistY = h - (160 * POSE_SCALE) - 20;
 
         canvasCtx.save();
@@ -364,8 +372,8 @@
         }
 
         if (results.poseLandmarks) {
-            drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: 'rgba(255, 255, 255, 0.3)', lineWidth: 3});
-            drawLandmarks(canvasCtx, results.poseLandmarks, {color: 'white', fillColor: '#00f0ff', lineWidth: 1, radius: 4});
+            // 隱藏玩家的完整骨架，只保留關節點，視覺上更乾淨專注在「穿牆」
+            drawLandmarks(canvasCtx, results.poseLandmarks, {color: 'rgba(255, 255, 255, 0.5)', fillColor: '#00f0ff', lineWidth: 1, radius: 3});
         }
         canvasCtx.restore();
     }
