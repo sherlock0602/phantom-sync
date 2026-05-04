@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幻影同步：完美穿牆版 🌱</title>
+    <title>幻影同步：修長俐落版 🌱</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -103,7 +103,7 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">完美穿牆 2.0 版</span></div>
+        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">修長俐落 2.0 版</span></div>
         <button class="start-btn" onclick="startGame()">LINK START</button>
     </div>
 
@@ -139,11 +139,10 @@
     let timeLeft = 6000; 
     let timerInterval;
 
-    // 🌟 核心參數設定
-    const POSE_SCALE = 2.0; // 完美的 2 倍黃金比例
+    // 🌟 全新比例參數：四肢更修長、線條更銳利
+    const POSE_SCALE = 2.0; 
+    const LIMB_STRETCH = 1.3; // 【小豆芽特製】四肢長度倍率 (增加 30% 長度)
     
-    // 20 套純地板動作！我們用最簡單的 [x, y] 向量來表示四肢伸展的方向
-    // 以中心腰部為起點，手腳延伸出去
     const poses = [
         { name: "勝利大 V 字 ✌️", lh: [-80, -130], rh: [80, -130], lf: [-40, 160], rf: [40, 160] },
         { name: "十字平舉 ✝️", lh: [-110, -50], rh: [110, -50], lf: [-20, 160], rf: [20, 160] },
@@ -252,7 +251,7 @@
         document.getElementById('result-text').innerHTML = `TRAINING COMPLETE<br><br><span style="font-size: 32px; color: #a0aec0;">最終得分</span><br><span style="font-size: 80px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.8);">${totalScore}</span><br><br><span style="font-size: 24px;">${rank}</span>`;
     }
 
-    // 🌟 全新「積木拼圖式」渲染：當肢體進入範圍，該段剪影就會亮起綠光！
+    // 🌟 全新瘦身+修長渲染引擎
     function drawSolidSilhouette(ctx, cx, waistY, poseData, hitStatus) {
         if (!poseData) return;
         ctx.save();
@@ -261,48 +260,47 @@
         const armStartY = waistY - 50 * POSE_SCALE;
         const legStartY = waistY + 20 * POSE_SCALE;
 
-        // 繪製身體中柱 (永遠是藍色發光)
+        // 身體主幹：寬度縮減到 55，頭部也稍微縮小配合比例
         ctx.beginPath();
-        ctx.arc(cx, waistY - 90 * POSE_SCALE, 35 * POSE_SCALE, 0, Math.PI*2); // 頭部
+        ctx.arc(cx, waistY - 95 * POSE_SCALE, 30 * POSE_SCALE, 0, Math.PI*2); // 頭部
         ctx.moveTo(cx, armStartY); ctx.lineTo(cx, legStartY); // 軀幹
-        ctx.lineWidth = 70 * POSE_SCALE; 
+        ctx.lineWidth = 55 * POSE_SCALE; 
         ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
         ctx.shadowColor = '#00f0ff';
         ctx.shadowBlur = 20;
         ctx.stroke();
 
-        // 專屬畫四肢的副程式
         const drawLimb = (startX, startY, endX, endY, isHit) => {
             ctx.beginPath();
             ctx.moveTo(startX, startY);
             ctx.lineTo(endX, endY);
-            // 只要命中，該段肢體就變成高亮綠色！
+            
+            // 四肢：寬度大幅縮減到 40，看起來更銳利
+            ctx.lineWidth = 40 * POSE_SCALE; 
             ctx.strokeStyle = isHit ? 'rgba(0, 255, 136, 0.7)' : 'rgba(0, 240, 255, 0.4)';
             ctx.shadowColor = isHit ? '#00ff88' : '#00f0ff';
             ctx.stroke();
             
-            // 內部的白色裝甲線
+            // 內部白色科技感線條
             ctx.beginPath();
             ctx.moveTo(startX, startY);
             ctx.lineTo(endX, endY);
-            ctx.lineWidth = 10;
+            ctx.lineWidth = 8;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.shadowColor = 'transparent';
             ctx.stroke();
-            ctx.lineWidth = 70 * POSE_SCALE; // 恢復粗度
         };
 
-        ctx.lineWidth = 70 * POSE_SCALE;
-        // 畫出四肢，並根據 hitStatus 決定顏色
-        drawLimb(cx, armStartY, cx + poseData.lh[0]*POSE_SCALE, waistY + poseData.lh[1]*POSE_SCALE, hitStatus.lh);
-        drawLimb(cx, armStartY, cx + poseData.rh[0]*POSE_SCALE, waistY + poseData.rh[1]*POSE_SCALE, hitStatus.rh);
-        drawLimb(cx, legStartY, cx + poseData.lf[0]*POSE_SCALE, waistY + poseData.lf[1]*POSE_SCALE, hitStatus.lf);
-        drawLimb(cx, legStartY, cx + poseData.rf[0]*POSE_SCALE, waistY + poseData.rf[1]*POSE_SCALE, hitStatus.rf);
+        // 畫出四肢，座標乘上最新的 LIMB_STRETCH 讓長度延伸！
+        drawLimb(cx, armStartY, cx + poseData.lh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lh[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.lh);
+        drawLimb(cx, armStartY, cx + poseData.rh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rh[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.rh);
+        drawLimb(cx, legStartY, cx + poseData.lf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lf[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.lf);
+        drawLimb(cx, legStartY, cx + poseData.rf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rf[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.rf);
 
         ctx.restore();
     }
 
-    // 🌟 核心數學：計算點到線段的最短距離 (真正的穿牆判定！)
+    // 核心數學：計算點到線段的最短距離
     function distToSegmentSquared(p, v, w) {
         var l2 = (v.x - w.x)*(v.x - w.x) + (v.y - w.y)*(v.y - w.y);
         if (l2 == 0) return (p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y);
@@ -313,14 +311,12 @@
     }
     function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
 
-    // 🌟 更新命中狀態：只要玩家的手腳「距離剪影中心線的距離 <= 寬容度」，就算人在剪影裡面！
     function updateHitStatus(landmarks, poseData, cx, waistY, w, h) {
         if (!poseData || !landmarks) return { lh: false, rh: false, lf: false, rf: false };
         let status = { lh: false, rh: false, lf: false, rf: false };
         
-        // 寬容半徑！因為粗度是 70*2 = 140，半徑 70。我再給多一點點寬容度到 90。
-        // 這樣不管手短手長，只要揮在對的方向線上就能命中！
-        const THRESHOLD = 90 * POSE_SCALE; 
+        // 配合變細的四肢，將寬容度微調成最舒適的 65 (乘上 SCALE)
+        const THRESHOLD = 65 * POSE_SCALE; 
         
         const armStartY = waistY - 50 * POSE_SCALE;
         const legStartY = waistY + 20 * POSE_SCALE;
@@ -331,15 +327,14 @@
             const p = {x: lm.x * w, y: lm.y * h};
             const v = {x: startX, y: startY};
             const targetW = {x: endX, y: endY};
-            // 計算玩家關節與剪影線段的最短距離
             return distToSegment(p, v, targetW) <= THRESHOLD;
         }
 
-        // 偵測 15(左手腕), 16(右手腕), 27(左腳踝), 28(右腳踝)
-        status.lh = checkLimb(15, cx, armStartY, cx + poseData.lh[0]*POSE_SCALE, waistY + poseData.lh[1]*POSE_SCALE);
-        status.rh = checkLimb(16, cx, armStartY, cx + poseData.rh[0]*POSE_SCALE, waistY + poseData.rh[1]*POSE_SCALE);
-        status.lf = checkLimb(27, cx, legStartY, cx + poseData.lf[0]*POSE_SCALE, waistY + poseData.lf[1]*POSE_SCALE);
-        status.rf = checkLimb(28, cx, legStartY, cx + poseData.rf[0]*POSE_SCALE, waistY + poseData.rf[1]*POSE_SCALE);
+        // 同樣將目標點的長度乘上 LIMB_STRETCH
+        status.lh = checkLimb(15, cx, armStartY, cx + poseData.lh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lh[1]*POSE_SCALE*LIMB_STRETCH);
+        status.rh = checkLimb(16, cx, armStartY, cx + poseData.rh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rh[1]*POSE_SCALE*LIMB_STRETCH);
+        status.lf = checkLimb(27, cx, legStartY, cx + poseData.lf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lf[1]*POSE_SCALE*LIMB_STRETCH);
+        status.rf = checkLimb(28, cx, legStartY, cx + poseData.rf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rf[1]*POSE_SCALE*LIMB_STRETCH);
 
         return status;
     }
@@ -351,8 +346,9 @@
         const h = canvasElement.height;
         const cx = w / 2;
         
-        // 貼地錨點，腳永遠切齊螢幕底端往上 20px
-        const waistY = h - (160 * POSE_SCALE) - 20;
+        // 🌟 【貼地修正】：因為腳伸長了，為了不讓腳超出版面，
+        // 腳底的基準 Y 座標也要乘上 LIMB_STRETCH，確保人物的腳剛好落在畫面底端
+        const waistY = h - (160 * POSE_SCALE * LIMB_STRETCH) - 20;
 
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, w, h);
@@ -372,7 +368,6 @@
         }
 
         if (results.poseLandmarks) {
-            // 隱藏玩家的完整骨架，只保留關節點，視覺上更乾淨專注在「穿牆」
             drawLandmarks(canvasCtx, results.poseLandmarks, {color: 'rgba(255, 255, 255, 0.5)', fillColor: '#00f0ff', lineWidth: 1, radius: 3});
         }
         canvasCtx.restore();
