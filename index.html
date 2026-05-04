@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幻影同步：極速穿牆版 🌱</title>
+    <title>幻影同步：極速穿牆版 (大範圍呼吸光圈) 🌱</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -21,8 +21,6 @@
         body { margin: 0; overflow: hidden; background-color: #0d0e15; font-family: 'Segoe UI', sans-serif; color: white; }
         .game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
         .input_video { display: none; }
-        
-        /* 鏡像翻轉，讓玩家看螢幕像照鏡子 */
         .output_canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
         .glass-panel {
@@ -141,11 +139,10 @@
     let timeLeft = 6000; 
     let timerInterval;
     
-    const HIT_TOLERANCE = 100; // 超高寬容度，玩家只要把關節放進這半徑 100px 的圓圈就算中！
+    // 🌟 【超級寬容度升級】從原本的 100px 直接加倍到 200px！
+    // 只要手腳進到這個半徑 200px 的範圍內就直接算命中！
+    const HIT_TOLERANCE = 200; 
 
-    // 🌟 全新的「座標穿牆系統」
-    // lines: 用來畫粗粗的剪影 [x1, y1, x2, y2]
-    // targets: 用來做碰撞偵測 {id: 關節ID, x, y}
     const poses = [
         {
             name: "V字勝利",
@@ -180,7 +177,7 @@
         {
             name: "瓦干達萬歲",
             lines: [[-50,-50, 40,-50], [50,-50, -40,-50], [-30,80, -40,240], [30,80, 40,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: 40, y: -50}, {id: 16, x: -40, y: -50}] // 雙手交叉
+            targets: [{id: 15, x: 40, y: -50}, {id: 16, x: -40, y: -50}] 
         },
         {
             name: "芭蕾天鵝",
@@ -216,12 +213,11 @@
 
     function loadStage(stage) {
         isGameRunning = false;
-        isTransitioning = true; // 鎖定狀態，避免重複觸發
+        isTransitioning = true; 
         stageNumText.innerText = stage;
         timeLeft = 6000;
         updateTimerUI();
         
-        // 隨機抽取一個動作！
         currentPoseData = poses[Math.floor(Math.random() * poses.length)];
         poseNameDisplay.innerText = currentPoseData.name;
         
@@ -234,7 +230,7 @@
             isTransitioning = false;
             isGameRunning = true;
             startTimer();
-        }, 1500); // 準備時間縮短為 1.5 秒
+        }, 1500); 
     }
 
     function startTimer() {
@@ -249,7 +245,7 @@
 
             if (timeLeft <= 0) {
                 timeLeft = 0;
-                handleStageResult(false); // 時間到，失敗
+                handleStageResult(false); 
             }
             updateTimerUI();
         }, 50); 
@@ -285,7 +281,7 @@
             setTimeout(showFinalResult, 1000);
         } else {
             currentStage++;
-            setTimeout(() => loadStage(currentStage), 800); // 極速切換：0.8秒後進入下一關
+            setTimeout(() => loadStage(currentStage), 800); 
         }
     }
 
@@ -306,7 +302,6 @@
         document.getElementById('result-text').innerHTML = `TRAINING COMPLETE<br><br><span style="font-size: 32px; color: #a0aec0;">最終得分</span><br><span style="font-size: 80px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.8);">${totalScore}</span><br><br><span style="font-size: 24px;">${rank}</span>`;
     }
 
-    // 🌟 全新寬剪影渲染引擎 (Hole in the Wall 視覺)
     function drawWideSilhouette(ctx, cx, cy, poseData, isMatched) {
         if (!poseData) return;
         
@@ -314,40 +309,49 @@
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         
-        // 如果成功塞進去，剪影會變成綠色發光！
         const mainColor = isMatched ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 240, 255, 0.4)';
         const glowColor = isMatched ? '#00ff88' : '#00f0ff';
 
         ctx.shadowColor = glowColor;
         ctx.shadowBlur = 30;
 
-        // 1. 畫出超寬的外層感應區 (厚度 140px，圓潤得像氣球)
         ctx.beginPath();
         poseData.lines.forEach(line => {
             ctx.moveTo(cx + line[0], cy + line[1]);
             ctx.lineTo(cx + line[2], cy + line[3]);
         });
+        // 剪影依然保持寬厚，讓玩家有塞進牆壁的感覺
         ctx.lineWidth = 140; 
         ctx.strokeStyle = mainColor;
         ctx.stroke();
 
-        // 2. 畫內部的核心骨幹
         ctx.lineWidth = 20;
         ctx.strokeStyle = `rgba(255, 255, 255, 0.6)`;
         ctx.stroke();
         
-        // 3. 畫出需要對齊的「關鍵感應點」 (半透明的圓圈提示玩家)
+        // 🌟 【超吸睛：動態呼吸光圈】
+        // 利用時間戳記來製作呼吸效果，並且光圈大小完美對應 HIT_TOLERANCE
+        const time = Date.now() / 150;
+        const pulseRadius = HIT_TOLERANCE + Math.sin(time) * 15; 
+
         poseData.targets.forEach(t => {
             ctx.beginPath();
-            ctx.arc(cx + t.x, cy + t.y, 40, 0, Math.PI * 2);
-            ctx.fillStyle = isMatched ? 'rgba(0, 255, 136, 0.6)' : 'rgba(255, 255, 0, 0.4)';
+            // 畫出對應感應範圍的超級大泡泡
+            ctx.arc(cx + t.x, cy + t.y, pulseRadius, 0, Math.PI * 2);
+            ctx.fillStyle = isMatched ? 'rgba(0, 255, 136, 0.3)' : 'rgba(255, 255, 0, 0.15)';
             ctx.fill();
+            
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = isMatched ? 'rgba(0, 255, 136, 0.8)' : 'rgba(255, 255, 0, 0.5)';
+            // 加上虛線效果看起來更有科幻雷達感
+            ctx.setLineDash([15, 10]); 
+            ctx.stroke();
+            ctx.setLineDash([]); // 恢復實線
         });
 
         ctx.restore();
     }
 
-    // 🌟 空間碰撞偵測 (判斷玩家是否塞進剪影內)
     function checkSilhouetteHit(landmarks, poseData, cx, cy, w, h) {
         if (!poseData || !landmarks) return false;
         
@@ -355,21 +359,18 @@
             const lm = landmarks[t.id];
             if (!lm) return false;
             
-            // 將 MediaPipe 的正規化座標轉為畫布像素
             const px = lm.x * w; 
             const py = lm.y * h;
             const tx = cx + t.x;
             const ty = cy + t.y;
 
-            // 計算距離 (Hypotenuse)
             const dist = Math.hypot(px - tx, py - ty);
             
-            // 只要有一個關鍵點超出寬容度 (HIT_TOLERANCE = 100px)，就算沒對齊
             if (dist > HIT_TOLERANCE) {
                 return false;
             }
         }
-        return true; // 所有點都在發光範圍內！
+        return true; 
     }
 
     function onResults(results) {
@@ -378,22 +379,19 @@
         const w = canvasElement.width;
         const h = canvasElement.height;
         const cx = w / 2;
-        const cy = h / 2 + 50; // 中心點稍微往下，符合人體站姿
+        const cy = h / 2 + 50; 
 
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, w, h);
         
-        // 繪製背景影片
         canvasCtx.drawImage(results.image, 0, 0, w, h);
 
         let isMatched = false;
 
         if (results.poseLandmarks && isGameRunning && !isTransitioning) {
-            // 判斷是否塞進剪影
             isMatched = checkSilhouetteHit(results.poseLandmarks, currentPoseData, cx, cy, w, h);
             
             if (isMatched) {
-                // 零秒斬殺！一對到立刻過關！
                 syncStatus.innerText = "SYNC COMPLETE!";
                 syncStatus.style.color = "var(--success-glow)";
                 handleStageResult(true); 
@@ -403,12 +401,10 @@
             }
         }
 
-        // 畫出「超寬人形牆」剪影
         if (currentPoseData) {
             drawWideSilhouette(canvasCtx, cx, cy, currentPoseData, isMatched);
         }
 
-        // 畫玩家的骨架 (做為輔助參考)
         if (results.poseLandmarks) {
             drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: 'rgba(255, 255, 255, 0.3)', lineWidth: 3});
             drawLandmarks(canvasCtx, results.poseLandmarks, {color: 'white', fillColor: '#00f0ff', lineWidth: 1, radius: 4});
