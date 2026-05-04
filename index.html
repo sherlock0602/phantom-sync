@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幻影同步：經典姿態覺醒 🌱</title>
+    <title>幻影同步：經典姿態覺醒 (完美視覺對應版) 🌱</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -23,7 +23,6 @@
         .input_video { display: none; }
         .output_canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        /* 輕科幻半透明 UI */
         .glass-panel {
             position: absolute; top: 20px; left: 20px; width: 340px; padding: 20px;
             background: var(--bg-glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -40,7 +39,6 @@
 
         .sync-status { font-size: 18px; font-weight: bold; margin-top: 10px; text-align: center; transition: all 0.2s; }
 
-        /* 動態大字特效 */
         .float-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 90px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
@@ -105,7 +103,7 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">經典姿態覺醒</span></div>
+        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">經典姿態覺醒 (視覺完美版)</span></div>
         <button class="start-btn" onclick="startGame()">LINK START</button>
     </div>
 
@@ -133,7 +131,7 @@
     const resultOverlay = document.getElementById('result-overlay');
     const flashLayer = document.getElementById('flash-layer');
 
-    const MAX_STAGES = 10; // 可以隨時改成你要的關卡數
+    const MAX_STAGES = 10; 
     let totalScore = 0;
     let currentStage = 1;
     let isGameRunning = false;
@@ -141,8 +139,7 @@
     let timeLeft = 6000; 
     let timerInterval;
 
-    // 🌟 回歸最穩定的「相對關節判斷法」
-    // 只要身體的相對位置對了，不管距離遠近都能精準過關！
+    // 🌟 最穩定的「相對關節判斷法」
     const poses = [
         { name: "V-Shape (高舉雙手)", check: (lm) => lm[15].y < lm[11].y && lm[16].y < lm[12].y && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
         { name: "T-Pose (平舉雙手)", check: (lm) => Math.abs(lm[15].y - lm[11].y) < 0.15 && Math.abs(lm[16].y - lm[12].y) < 0.15 },
@@ -178,7 +175,6 @@
         isGameRunning = false; isTransitioning = true; 
         stageNumText.innerText = stage; timeLeft = 6000; updateTimerUI();
         
-        // 隨機抽選動作
         currentPoseIndex = Math.floor(Math.random() * poses.length);
         currentPoseData = poses[currentPoseIndex];
         poseNameDisplay.innerText = currentPoseData.name;
@@ -212,7 +208,6 @@
         timerBar.style.boxShadow = timeLeft < 2000 ? "0 0 10px var(--fail-glow)" : "0 0 10px var(--primary-glow)";
     }
 
-    // 🌟 零秒斬殺：只要比對成功，立刻過關！
     function handleStageResult(isSuccess) {
         isGameRunning = false; isTransitioning = true; clearInterval(timerInterval);
         if (isSuccess) {
@@ -249,15 +244,14 @@
         document.getElementById('result-text').innerHTML = `TRAINING COMPLETE<br><br><span style="font-size: 32px; color: #a0aec0;">最終得分</span><br><span style="font-size: 80px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.8);">${totalScore}</span><br><br><span style="font-size: 24px;">${rank}</span>`;
     }
 
-    // 🌟 經典的「小豆芽全息替身」視覺輔助
-    function drawHologramAvatar(ctx, isMatched) {
+    // 🌟 全息替身視覺渲染器 (100% 對應 16 個動作)
+    function drawHologramAvatar(ctx, poseIndex, isMatched) {
         const cx = canvasElement.width / 2;
-        const cy = canvasElement.height / 2 + 50; // 稍微往下移
+        const cy = canvasElement.height / 2 + 50; 
         
         ctx.save();
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         
-        // 如果判定成功，整個替身會爆發出綠色光芒！
         const bodyColor = isMatched ? 'rgba(0, 255, 136, 0.5)' : 'rgba(0, 240, 255, 0.35)';
         const glowColor = isMatched ? 'rgba(0, 255, 136, 0.9)' : 'rgba(0, 240, 255, 0.9)';
         ctx.shadowColor = glowColor;
@@ -269,22 +263,15 @@
             ctx.lineWidth = thickness * 0.25; ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.stroke();
         };
 
-        const torsoTop = cy - 80; const torsoBot = cy + 60;
+        const torsoTop = cy - 80; const torsoBot = cy + 60; const headY = torsoTop - 65;
 
-        // 畫軀幹與雙腿
+        // 畫軀幹與頭部
         drawCapsule(cx, torsoTop, cx, torsoBot, 70); 
-        drawCapsule(cx - 25, torsoBot, cx - 35, cy + 170, 40); 
-        drawCapsule(cx - 35, cy + 170, cx - 40, cy + 260, 30); 
-        drawCapsule(cx + 25, torsoBot, cx + 35, cy + 170, 40); 
-        drawCapsule(cx + 35, cy + 170, cx + 40, cy + 260, 30); 
-
-        // 畫頭部
-        const headY = torsoTop - 65;
         ctx.beginPath(); ctx.arc(cx, headY, 40, 0, Math.PI * 2);
         ctx.fillStyle = bodyColor; ctx.fill();
         ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.stroke();
 
-        // 🌱 專屬彩蛋：頭頂兩片小嫩葉
+        // 🌱 專屬彩蛋：頭頂小嫩葉
         ctx.beginPath();
         ctx.moveTo(cx, headY - 40);
         ctx.quadraticCurveTo(cx - 25, headY - 70, cx - 10, headY - 80);
@@ -297,21 +284,77 @@
 
         ctx.shadowBlur = isMatched ? 40 : 20;
 
-        // 利用 index 分類，繪製幾個代表性的手部動作作為視覺輔助
-        if (currentPoseData.name.includes("V-Shape") || currentPoseData.name.includes("大字")) {
-            drawCapsule(cx - 35, torsoTop, cx - 110, cy - 150, 35); drawCapsule(cx - 110, cy - 150, cx - 150, cy - 230, 25); 
-            drawCapsule(cx + 35, torsoTop, cx + 110, cy - 150, 35); drawCapsule(cx + 110, cy - 150, cx + 150, cy - 230, 25); 
-        } else if (currentPoseData.name.includes("T-Pose") || currentPoseData.name.includes("殭屍")) {
-            drawCapsule(cx - 35, torsoTop, cx - 130, torsoTop, 35); drawCapsule(cx - 130, torsoTop, cx - 210, torsoTop, 25); 
-            drawCapsule(cx + 35, torsoTop, cx + 130, torsoTop, 35); drawCapsule(cx + 130, torsoTop, cx + 210, torsoTop, 25); 
-        } else if (currentPoseData.name.includes("舉左手") || currentPoseData.name.includes("週末夜")) {
-            drawCapsule(cx - 35, torsoTop, cx - 110, cy - 150, 35); drawCapsule(cx - 110, cy - 150, cx - 150, cy - 230, 25); 
-            drawCapsule(cx + 35, torsoTop, cx + 70, cy + 10, 35); drawCapsule(cx + 70, cy + 10, cx + 60, cy + 100, 25); 
-        } else {
-            // 通用待機防禦動作
-            drawCapsule(cx - 35, torsoTop, cx - 80, cy - 20, 35); drawCapsule(cx - 80, cy - 20, cx - 40, cy - 50, 25); 
-            drawCapsule(cx + 35, torsoTop, cx + 80, cy - 20, 35); drawCapsule(cx + 80, cy - 20, cx + 40, cy - 50, 25); 
+        // 預設的四肢坐標 (防呆待機)
+        let la1 = [cx-35, torsoTop, cx-50, cy-10, 35]; let la2 = [cx-50, cy-10, cx-60, cy+60, 25];
+        let ra1 = [cx+35, torsoTop, cx+50, cy-10, 35]; let ra2 = [cx+50, cy-10, cx+60, cy+60, 25];
+        let ll1 = [cx-25, torsoBot, cx-35, cy+170, 40]; let ll2 = [cx-35, cy+170, cx-40, cy+260, 30];
+        let rl1 = [cx+25, torsoBot, cx+35, cy+170, 40]; let rl2 = [cx+35, cy+170, cx+40, cy+260, 30];
+
+        // 🌟 16 動作完美對應 Switch
+        switch(poseIndex) {
+            case 0: // V-Shape
+                la1=[cx-35, torsoTop, cx-90, cy-150, 35]; la2=[cx-90, cy-150, cx-130, cy-230, 25];
+                ra1=[cx+35, torsoTop, cx+90, cy-150, 35]; ra2=[cx+90, cy-150, cx+130, cy-230, 25]; break;
+            case 1: // T-Pose
+                la1=[cx-35, torsoTop, cx-120, torsoTop, 35]; la2=[cx-120, torsoTop, cx-190, torsoTop, 25];
+                ra1=[cx+35, torsoTop, cx+120, torsoTop, 35]; ra2=[cx+120, torsoTop, cx+190, torsoTop, 25]; break;
+            case 2: // One-Hand High
+                la1=[cx-35, torsoTop, cx-90, cy-150, 35]; la2=[cx-90, cy-150, cx-110, cy-230, 25]; break;
+            case 3: // Wakanda (交叉防禦)
+                la1=[cx-35, torsoTop, cx-10, cy-30, 35]; la2=[cx-10, cy-30, cx+30, cy-60, 25];
+                ra1=[cx+35, torsoTop, cx+10, cy-30, 35]; ra2=[cx+10, cy-30, cx-30, cy-60, 25]; break;
+            case 4: // 雙手抱頭
+                la1=[cx-35, torsoTop, cx-80, cy-120, 35]; la2=[cx-80, cy-120, cx-20, headY, 25];
+                ra1=[cx+35, torsoTop, cx+80, cy-120, 35]; ra2=[cx+80, cy-120, cx+20, headY, 25]; break;
+            case 5: // 雙手叉腰
+                la1=[cx-35, torsoTop, cx-90, cy-20, 35]; la2=[cx-90, cy-20, cx-30, torsoBot, 25];
+                ra1=[cx+35, torsoTop, cx+90, cy-20, 35]; ra2=[cx+90, cy-20, cx+30, torsoBot, 25]; break;
+            case 6: // 投降姿勢
+                la1=[cx-35, torsoTop, cx-110, torsoTop, 35]; la2=[cx-110, torsoTop, cx-110, cy-100, 25];
+                ra1=[cx+35, torsoTop, cx+110, torsoTop, 35]; ra2=[cx+110, torsoTop, cx+110, cy-100, 25]; break;
+            case 7: // 殭屍平舉
+                la1=[cx-35, torsoTop, cx-35, cy-10, 35]; la2=[cx-35, cy-10, cx-35, cy+60, 25];
+                ra1=[cx+35, torsoTop, cx+35, cy-10, 35]; ra2=[cx+35, cy-10, cx+35, cy+60, 25]; break;
+            case 8: // Disco Time
+                la1=[cx-35, torsoTop, cx-80, cy-150, 35]; la2=[cx-80, cy-150, cx-40, cy-220, 25];
+                ra1=[cx+35, torsoTop, cx+10, cy-10, 35]; ra2=[cx+10, cy-10, cx-20, cy+60, 25]; break;
+            case 9: // 芭蕾天鵝
+                la1=[cx-35, torsoTop, cx-80, cy-150, 35]; la2=[cx-80, cy-150, cx, cy-200, 25];
+                ra1=[cx+35, torsoTop, cx+80, cy-150, 35]; ra2=[cx+80, cy-150, cx, cy-200, 25]; break;
+            case 10: // 龜派氣功
+                la1=[cx-35, torsoTop, cx-80, cy-20, 35]; la2=[cx-80, cy-20, cx+40, cy-20, 25];
+                ra1=[cx+35, torsoTop, cx+80, cy-20, 35]; ra2=[cx+80, cy-20, cx+40, cy-20, 25];
+                ll1=[cx-25, torsoBot, cx-45, cy+150, 40]; ll2=[cx-45, cy+150, cx-50, cy+220, 30]; 
+                rl1=[cx+25, torsoBot, cx+45, cy+150, 40]; rl2=[cx+45, cy+150, cx+50, cy+220, 30]; break;
+            case 11: // 大字爆
+                la1=[cx-35, torsoTop, cx-100, cy-120, 35]; la2=[cx-100, cy-120, cx-160, cy-180, 25];
+                ra1=[cx+35, torsoTop, cx+100, cy-120, 35]; ra2=[cx+100, cy-120, cx+160, cy-180, 25];
+                ll1=[cx-25, torsoBot, cx-80, cy+170, 40]; ll2=[cx-80, cy+170, cx-120, cy+260, 30]; 
+                rl1=[cx+25, torsoBot, cx+80, cy+170, 40]; rl2=[cx+80, cy+170, cx+120, cy+260, 30]; break;
+            case 12: // 祈禱
+                la1=[cx-35, torsoTop, cx-20, cy-40, 35]; la2=[cx-20, cy-40, cx, cy-80, 25];
+                ra1=[cx+35, torsoTop, cx+20, cy-40, 35]; ra2=[cx+20, cy-40, cx, cy-80, 25]; break;
+            case 13: // 健美先生
+                la1=[cx-35, torsoTop, cx-110, cy-60, 35]; la2=[cx-110, cy-60, cx-80, cy-130, 25];
+                ra1=[cx+35, torsoTop, cx+110, cy-60, 35]; ra2=[cx+110, cy-60, cx+80, cy-130, 25]; break;
+            case 14: // 深蹲
+                la1=[cx-35, torsoTop, cx-60, cy-30, 35]; la2=[cx-60, cy-30, cx-40, cy+20, 25];
+                ra1=[cx+35, torsoTop, cx+60, cy-30, 35]; ra2=[cx+60, cy-30, cx+40, cy+20, 25];
+                ll1=[cx-25, torsoBot, cx-60, cy+140, 40]; ll2=[cx-60, cy+140, cx-40, cy+200, 30];
+                rl1=[cx+25, torsoBot, cx+60, cy+140, 40]; rl2=[cx+60, cy+140, cx+40, cy+200, 30]; break;
+            case 15: // 金雞獨立
+                la1=[cx-35, torsoTop, cx-100, torsoTop, 35]; la2=[cx-100, torsoTop, cx-150, torsoTop, 25];
+                ra1=[cx+35, torsoTop, cx+100, torsoTop, 35]; ra2=[cx+100, torsoTop, cx+150, torsoTop, 25];
+                ll1=[cx-25, torsoBot, cx-35, cy+170, 40]; ll2=[cx-35, cy+170, cx-40, cy+260, 30]; 
+                rl1=[cx+25, torsoBot, cx+80, cy+100, 40]; rl2=[cx+80, cy+100, cx+40, cy+180, 30]; break;
         }
+
+        // 執行繪製
+        drawCapsule(...la1); drawCapsule(...la2);
+        drawCapsule(...ra1); drawCapsule(...ra2);
+        drawCapsule(...ll1); drawCapsule(...ll2);
+        drawCapsule(...rl1); drawCapsule(...rl2);
+
         ctx.restore();
     }
 
@@ -327,7 +370,6 @@
 
         let isMatched = false;
 
-        // 🌟 最核心的姿態比對邏輯 (Relative Check)
         if (results.poseLandmarks && isGameRunning && !isTransitioning) {
             if (currentPoseData && currentPoseData.check(results.poseLandmarks)) {
                 isMatched = true;
@@ -335,12 +377,10 @@
             }
         }
 
-        // 繪製帶有嫩葉的小豆芽全息替身
         if (currentPoseData) {
-            drawHologramAvatar(canvasCtx, isMatched);
+            drawHologramAvatar(canvasCtx, currentPoseIndex, isMatched);
         }
 
-        // 繪製玩家的科技感骨架
         if (results.poseLandmarks) {
             drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: 'rgba(255, 255, 255, 0.4)', lineWidth: 3});
             drawLandmarks(canvasCtx, results.poseLandmarks, {color: 'white', fillColor: '#00f0ff', lineWidth: 1, radius: 4});
