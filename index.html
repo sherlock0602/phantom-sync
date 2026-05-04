@@ -139,26 +139,45 @@
     let timeLeft = 6000; 
     let timerInterval;
 
-    // 🌟 最穩定的「相對關節判斷法」
+// 🌟 最穩定的「相對關節判斷法 (動態比例升級版)」
     const poses = [
         { name: "V-Shape (高舉雙手)", check: (lm) => lm[15].y < lm[11].y && lm[16].y < lm[12].y && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
         { name: "T-Pose (平舉雙手)", check: (lm) => Math.abs(lm[15].y - lm[11].y) < 0.15 && Math.abs(lm[16].y - lm[12].y) < 0.15 },
         { name: "One-Hand High (舉左手)", check: (lm) => lm[15].y < lm[11].y && lm[16].y > lm[12].y },
-        { name: "交叉防禦 (Wakanda!)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < 0.1 && lm[15].y > lm[0].y && lm[15].y < lm[23].y },
-        { name: "雙手抱頭 (絕對防禦)", check: (lm) => lm[15].y < lm[0].y && lm[16].y < lm[0].y && Math.abs(lm[15].x - lm[0].x) < 0.15 && Math.abs(lm[16].x - lm[0].x) < 0.15 },
-        { name: "雙手叉腰 (霸氣宣告)", check: (lm) => Math.abs(lm[15].y - lm[23].y) < 0.15 && Math.abs(lm[16].y - lm[24].y) < 0.15 && lm[13].x > lm[11].x && lm[14].x < lm[12].x },
+        
+        // 交叉防禦：雙手距離小於「肩膀寬度的 80%」
+        { name: "交叉防禦 (Wakanda!)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < Math.abs(lm[11].x - lm[12].x) * 0.8 && lm[15].y > lm[0].y && lm[15].y < lm[23].y },
+        
+        // 雙手抱頭：雙手都在鼻子上方，且雙手的 X 軸非常靠近頭部中心
+        { name: "雙手抱頭 (絕對防禦)", check: (lm) => lm[15].y < lm[0].y && lm[16].y < lm[0].y && Math.abs(lm[15].x - lm[0].x) < Math.abs(lm[11].x - lm[12].x) && Math.abs(lm[16].x - lm[0].x) < Math.abs(lm[11].x - lm[12].x) },
+        
+        // 雙手叉腰：手肘寬度大於「肩膀寬度的 1.5 倍」，且手腕在骨盆附近
+        { name: "雙手叉腰 (霸氣宣告)", check: (lm) => Math.abs(lm[15].y - lm[23].y) < 0.15 && Math.abs(lm[16].y - lm[24].y) < 0.15 && Math.abs(lm[13].x - lm[14].x) > Math.abs(lm[11].x - lm[12].x) * 1.5 },
+        
         { name: "投降姿勢 (Stick 'em up)", check: (lm) => Math.abs(lm[13].y - lm[11].y) < 0.15 && Math.abs(lm[14].y - lm[12].y) < 0.15 && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
         { name: "殭屍平舉 (道長來了)", check: (lm) => Math.abs(lm[15].y - lm[11].y) < 0.15 && Math.abs(lm[16].y - lm[12].y) < 0.15 && Math.abs(lm[15].y - lm[13].y) < 0.1 && Math.abs(lm[16].y - lm[14].y) < 0.1 },
         { name: "週末夜狂熱 (Disco Time)", check: (lm) => (lm[15].y < lm[0].y && lm[16].y > lm[24].y) || (lm[16].y < lm[0].y && lm[15].y > lm[23].y) },
-        { name: "芭蕾圓環 (天鵝湖)", check: (lm) => lm[15].y < lm[0].y && lm[16].y < lm[0].y && Math.abs(lm[15].x - lm[16].x) < 0.15 },
-        { name: "龜派氣功 (能量蓄力)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < 0.1 && Math.abs(lm[15].y - lm[16].y) < 0.1 && lm[15].y > lm[11].y && lm[15].y < lm[23].y },
-        { name: "大字爆 (Starfish)", check: (lm) => lm[15].y < lm[11].y && lm[16].y < lm[12].y && Math.abs(lm[15].x - lm[16].x) > 0.4 && Math.abs(lm[27].x - lm[28].x) > 0.2 },
+        
+        // 芭蕾圓環：雙手在頭頂上，且雙手距離小於「肩寬的 80%」
+        { name: "芭蕾圓環 (天鵝湖)", check: (lm) => lm[15].y < lm[0].y && lm[16].y < lm[0].y && Math.abs(lm[15].x - lm[16].x) < Math.abs(lm[11].x - lm[12].x) * 0.8 },
+        
+        // 龜派氣功：雙手在胸前，距離小於「肩寬的 50%」
+        { name: "龜派氣功 (能量蓄力)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < Math.abs(lm[11].x - lm[12].x) * 0.5 && Math.abs(lm[15].y - lm[16].y) < 0.1 && lm[15].y > lm[11].y && lm[15].y < lm[23].y },
+        
+        // 🌟 修復核心：大字爆！雙手距離 > 肩寬2倍，雙腳距離 > 骨盆寬度 1.5 倍
+        { name: "大字爆 (Starfish)", check: (lm) => lm[15].y < lm[11].y && lm[16].y < lm[12].y && Math.abs(lm[15].x - lm[16].x) > Math.abs(lm[11].x - lm[12].x) * 2 && Math.abs(lm[27].x - lm[28].x) > Math.abs(lm[23].x - lm[24].x) * 1.5 },
+        
         { name: "神聖祈禱 (Pray)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < 0.05 && lm[15].y > lm[0].y && Math.abs(lm[15].y - lm[11].y) < 0.15 },
-        { name: "健美先生 (Muscle Flex)", check: (lm) => lm[13].x > lm[11].x && lm[14].x < lm[12].x && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
-        { name: "深蹲警戒 (Squat Mode)", check: (lm) => Math.abs(lm[23].y - Math.min(lm[25].y, lm[26].y)) < 0.2 },
-        { name: "金雞獨立 (Flamingo Stand)", check: (lm) => Math.abs(lm[25].y - lm[26].y) > 0.15 }
+        
+        // 健美先生：手肘撐開(大於肩寬 1.5倍)，手腕低於手肘
+        { name: "健美先生 (Muscle Flex)", check: (lm) => Math.abs(lm[13].x - lm[14].x) > Math.abs(lm[11].x - lm[12].x) * 1.5 && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
+        
+        // 🌟 修復核心：深蹲！臀部跟膝蓋的 Y 軸差距，小於「身體長度的 50%」
+        { name: "深蹲警戒 (Squat Mode)", check: (lm) => Math.abs(lm[23].y - Math.min(lm[25].y, lm[26].y)) < Math.abs(lm[11].y - lm[23].y) * 0.5 },
+        
+        // 🌟 修復核心：金雞獨立！兩邊膝蓋的高低差，大於「身體長度的 40%」
+        { name: "金雞獨立 (Flamingo Stand)", check: (lm) => Math.abs(lm[25].y - lm[26].y) > Math.abs(lm[11].y - lm[23].y) * 0.4 }
     ];
-
     let currentPoseData = null;
     let currentPoseIndex = 0;
 
