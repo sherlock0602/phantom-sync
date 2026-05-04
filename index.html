@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幻影同步：修長俐落版 🌱</title>
+    <title>幻影同步：經典姿態覺醒 🌱</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -23,6 +23,7 @@
         .input_video { display: none; }
         .output_canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
+        /* 輕科幻半透明 UI */
         .glass-panel {
             position: absolute; top: 20px; left: 20px; width: 340px; padding: 20px;
             background: var(--bg-glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -39,6 +40,7 @@
 
         .sync-status { font-size: 18px; font-weight: bold; margin-top: 10px; text-align: center; transition: all 0.2s; }
 
+        /* 動態大字特效 */
         .float-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 90px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
@@ -77,11 +79,11 @@
     <div class="float-text" id="float-text">PERFECT!</div>
 
     <div class="glass-panel" id="game-ui">
-        <div class="ui-header"><span>🌱</span> 完美穿牆挑戰</div>
+        <div class="ui-header"><span>🌱</span> SYNC AVATAR</div>
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
             <div>
                 <div class="ui-label">STAGE</div>
-                <div class="ui-value"><span id="stage-num">1</span>/<span id="max-stage-num">20</span></div>
+                <div class="ui-value"><span id="stage-num">1</span>/<span id="max-stage-num">10</span></div>
             </div>
             <div style="text-align: center;">
                 <div class="ui-label">SCORE</div>
@@ -103,7 +105,7 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">修長俐落 2.0 版</span></div>
+        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">經典姿態覺醒</span></div>
         <button class="start-btn" onclick="startGame()">LINK START</button>
     </div>
 
@@ -131,7 +133,7 @@
     const resultOverlay = document.getElementById('result-overlay');
     const flashLayer = document.getElementById('flash-layer');
 
-    const MAX_STAGES = 20;
+    const MAX_STAGES = 10; // 可以隨時改成你要的關卡數
     let totalScore = 0;
     let currentStage = 1;
     let isGameRunning = false;
@@ -139,35 +141,29 @@
     let timeLeft = 6000; 
     let timerInterval;
 
-    // 🌟 全新比例參數：四肢更修長、線條更銳利
-    const POSE_SCALE = 2.0; 
-    const LIMB_STRETCH = 1.3; // 【小豆芽特製】四肢長度倍率 (增加 30% 長度)
-    
+    // 🌟 回歸最穩定的「相對關節判斷法」
+    // 只要身體的相對位置對了，不管距離遠近都能精準過關！
     const poses = [
-        { name: "勝利大 V 字 ✌️", lh: [-80, -130], rh: [80, -130], lf: [-40, 160], rf: [40, 160] },
-        { name: "十字平舉 ✝️", lh: [-110, -50], rh: [110, -50], lf: [-20, 160], rf: [20, 160] },
-        { name: "大字爆開 🌟", lh: [-120, -100], rh: [120, -100], lf: [-70, 160], rf: [70, 160] },
-        { name: "投降姿勢 ✋🤚", lh: [-60, -120], rh: [60, -120], lf: [-40, 160], rf: [40, 160] },
-        { name: "右手高舉 🙋‍♂️", lh: [-60, 0], rh: [50, -130], lf: [-40, 160], rf: [40, 160] },
-        { name: "左手高舉 🙋‍♀️", lh: [-50, -130], rh: [60, 0], lf: [-40, 160], rf: [40, 160] },
-        { name: "雙手叉腰 😠", lh: [-45, 0], rh: [45, 0], lf: [-20, 160], rf: [20, 160] },
-        { name: "週末夜狂熱 🕺", lh: [-70, -130], rh: [70, 10], lf: [-50, 160], rf: [50, 160] },
-        { name: "週末夜狂熱(反) 💃", lh: [-70, 10], rh: [70, -130], lf: [-50, 160], rf: [50, 160] },
-        { name: "殭屍平舉 🧟", lh: [-40, -60], rh: [40, -60], lf: [-30, 160], rf: [30, 160] },
-        { name: "深蹲警戒 🏋️", lh: [-50, -40], rh: [50, -40], lf: [-60, 110], rf: [60, 110] },
-        { name: "相撲選手 🤼", lh: [-80, 0], rh: [80, 0], lf: [-90, 110], rf: [90, 110] },
-        { name: "神聖祈禱 🙏", lh: [-15, -50], rh: [15, -50], lf: [-20, 160], rf: [20, 160] },
-        { name: "交叉防禦(下) 🛡️", lh: [-15, 20], rh: [15, 20], lf: [-50, 160], rf: [50, 160] },
-        { name: "交叉防禦(上) 🙅‍♂️", lh: [-20, -120], rh: [20, -120], lf: [-40, 160], rf: [40, 160] },
-        { name: "健美先生 💪", lh: [-90, -80], rh: [90, -80], lf: [-40, 160], rf: [40, 160] },
-        { name: "芭蕾天鵝 🦢", lh: [-10, -140], rh: [10, -140], lf: [-20, 160], rf: [20, 160] },
-        { name: "摸頭殺 🤦", lh: [-30, -100], rh: [30, -100], lf: [-40, 160], rf: [40, 160] },
-        { name: "側身伸展 🤸", lh: [0, -130], rh: [50, 0], lf: [-50, 160], rf: [30, 160] },
-        { name: "雙手托天 ☁️", lh: [-40, -140], rh: [40, -140], lf: [-30, 160], rf: [30, 160] }
+        { name: "V-Shape (高舉雙手)", check: (lm) => lm[15].y < lm[11].y && lm[16].y < lm[12].y && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
+        { name: "T-Pose (平舉雙手)", check: (lm) => Math.abs(lm[15].y - lm[11].y) < 0.15 && Math.abs(lm[16].y - lm[12].y) < 0.15 },
+        { name: "One-Hand High (舉左手)", check: (lm) => lm[15].y < lm[11].y && lm[16].y > lm[12].y },
+        { name: "交叉防禦 (Wakanda!)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < 0.1 && lm[15].y > lm[0].y && lm[15].y < lm[23].y },
+        { name: "雙手抱頭 (絕對防禦)", check: (lm) => lm[15].y < lm[0].y && lm[16].y < lm[0].y && Math.abs(lm[15].x - lm[0].x) < 0.15 && Math.abs(lm[16].x - lm[0].x) < 0.15 },
+        { name: "雙手叉腰 (霸氣宣告)", check: (lm) => Math.abs(lm[15].y - lm[23].y) < 0.15 && Math.abs(lm[16].y - lm[24].y) < 0.15 && lm[13].x > lm[11].x && lm[14].x < lm[12].x },
+        { name: "投降姿勢 (Stick 'em up)", check: (lm) => Math.abs(lm[13].y - lm[11].y) < 0.15 && Math.abs(lm[14].y - lm[12].y) < 0.15 && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
+        { name: "殭屍平舉 (道長來了)", check: (lm) => Math.abs(lm[15].y - lm[11].y) < 0.15 && Math.abs(lm[16].y - lm[12].y) < 0.15 && Math.abs(lm[15].y - lm[13].y) < 0.1 && Math.abs(lm[16].y - lm[14].y) < 0.1 },
+        { name: "週末夜狂熱 (Disco Time)", check: (lm) => (lm[15].y < lm[0].y && lm[16].y > lm[24].y) || (lm[16].y < lm[0].y && lm[15].y > lm[23].y) },
+        { name: "芭蕾圓環 (天鵝湖)", check: (lm) => lm[15].y < lm[0].y && lm[16].y < lm[0].y && Math.abs(lm[15].x - lm[16].x) < 0.15 },
+        { name: "龜派氣功 (能量蓄力)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < 0.1 && Math.abs(lm[15].y - lm[16].y) < 0.1 && lm[15].y > lm[11].y && lm[15].y < lm[23].y },
+        { name: "大字爆 (Starfish)", check: (lm) => lm[15].y < lm[11].y && lm[16].y < lm[12].y && Math.abs(lm[15].x - lm[16].x) > 0.4 && Math.abs(lm[27].x - lm[28].x) > 0.2 },
+        { name: "神聖祈禱 (Pray)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < 0.05 && lm[15].y > lm[0].y && Math.abs(lm[15].y - lm[11].y) < 0.15 },
+        { name: "健美先生 (Muscle Flex)", check: (lm) => lm[13].x > lm[11].x && lm[14].x < lm[12].x && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
+        { name: "深蹲警戒 (Squat Mode)", check: (lm) => Math.abs(lm[23].y - Math.min(lm[25].y, lm[26].y)) < 0.2 },
+        { name: "金雞獨立 (Flamingo Stand)", check: (lm) => Math.abs(lm[25].y - lm[26].y) > 0.15 }
     ];
 
     let currentPoseData = null;
-    let currentHitStatus = { lh: false, rh: false, lf: false, rf: false };
+    let currentPoseIndex = 0;
 
     function startGame() {
         flashLayer.classList.remove('system-start-flash'); void flashLayer.offsetWidth; flashLayer.classList.add('system-start-flash');
@@ -182,11 +178,12 @@
         isGameRunning = false; isTransitioning = true; 
         stageNumText.innerText = stage; timeLeft = 6000; updateTimerUI();
         
-        currentPoseData = poses[Math.floor(Math.random() * poses.length)];
+        // 隨機抽選動作
+        currentPoseIndex = Math.floor(Math.random() * poses.length);
+        currentPoseData = poses[currentPoseIndex];
         poseNameDisplay.innerText = currentPoseData.name;
         
-        currentHitStatus = { lh: false, rh: false, lf: false, rf: false };
-        syncStatus.innerText = "將四肢伸進剪影中！";
+        syncStatus.innerText = "擺出指定的動作！";
         syncStatus.style.color = "white";
         uiPanel.style.borderColor = "rgba(255, 255, 255, 0.15)";
         uiPanel.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.5)";
@@ -215,6 +212,7 @@
         timerBar.style.boxShadow = timeLeft < 2000 ? "0 0 10px var(--fail-glow)" : "0 0 10px var(--primary-glow)";
     }
 
+    // 🌟 零秒斬殺：只要比對成功，立刻過關！
     function handleStageResult(isSuccess) {
         isGameRunning = false; isTransitioning = true; clearInterval(timerInterval);
         if (isSuccess) {
@@ -222,7 +220,7 @@
             showFloatText("PERFECT!", "var(--success-glow)");
             uiPanel.style.borderColor = "var(--success-glow)";
             uiPanel.style.boxShadow = "0 0 30px var(--success-glow)";
-            syncStatus.innerText = "全部命中！";
+            syncStatus.innerText = "SYNC COMPLETE!";
             syncStatus.style.color = "var(--success-glow)";
         } else {
             totalScore -= 50;
@@ -245,98 +243,76 @@
 
     function showFinalResult() {
         resultOverlay.classList.remove('hidden');
-        let rank = totalScore === MAX_STAGES * 100 ? "<span style='color:#ffd700'>S 級：地板王者！</span>" :
+        let rank = totalScore === MAX_STAGES * 100 ? "<span style='color:#ffd700'>S 級：姿態之神！</span>" :
                    totalScore > 0 ? "<span style='color:#00ff88'>A 級：身手矯健！</span>" :
                    "<span style='color:#ff4444'>C 級：多做運動啦！</span>";
         document.getElementById('result-text').innerHTML = `TRAINING COMPLETE<br><br><span style="font-size: 32px; color: #a0aec0;">最終得分</span><br><span style="font-size: 80px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.8);">${totalScore}</span><br><br><span style="font-size: 24px;">${rank}</span>`;
     }
 
-    // 🌟 全新瘦身+修長渲染引擎
-    function drawSolidSilhouette(ctx, cx, waistY, poseData, hitStatus) {
-        if (!poseData) return;
+    // 🌟 經典的「小豆芽全息替身」視覺輔助
+    function drawHologramAvatar(ctx, isMatched) {
+        const cx = canvasElement.width / 2;
+        const cy = canvasElement.height / 2 + 50; // 稍微往下移
+        
         ctx.save();
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         
-        const armStartY = waistY - 50 * POSE_SCALE;
-        const legStartY = waistY + 20 * POSE_SCALE;
+        // 如果判定成功，整個替身會爆發出綠色光芒！
+        const bodyColor = isMatched ? 'rgba(0, 255, 136, 0.5)' : 'rgba(0, 240, 255, 0.35)';
+        const glowColor = isMatched ? 'rgba(0, 255, 136, 0.9)' : 'rgba(0, 240, 255, 0.9)';
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = isMatched ? 40 : 20;
 
-        // 身體主幹：寬度縮減到 55，頭部也稍微縮小配合比例
-        ctx.beginPath();
-        ctx.arc(cx, waistY - 95 * POSE_SCALE, 30 * POSE_SCALE, 0, Math.PI*2); // 頭部
-        ctx.moveTo(cx, armStartY); ctx.lineTo(cx, legStartY); // 軀幹
-        ctx.lineWidth = 55 * POSE_SCALE; 
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-        ctx.shadowColor = '#00f0ff';
-        ctx.shadowBlur = 20;
-        ctx.stroke();
-
-        const drawLimb = (startX, startY, endX, endY, isHit) => {
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            
-            // 四肢：寬度大幅縮減到 40，看起來更銳利
-            ctx.lineWidth = 40 * POSE_SCALE; 
-            ctx.strokeStyle = isHit ? 'rgba(0, 255, 136, 0.7)' : 'rgba(0, 240, 255, 0.4)';
-            ctx.shadowColor = isHit ? '#00ff88' : '#00f0ff';
-            ctx.stroke();
-            
-            // 內部白色科技感線條
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.lineWidth = 8;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.shadowColor = 'transparent';
-            ctx.stroke();
+        const drawCapsule = (x1, y1, x2, y2, thickness) => {
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+            ctx.lineWidth = thickness; ctx.strokeStyle = bodyColor; ctx.stroke();
+            ctx.lineWidth = thickness * 0.25; ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.stroke();
         };
 
-        // 畫出四肢，座標乘上最新的 LIMB_STRETCH 讓長度延伸！
-        drawLimb(cx, armStartY, cx + poseData.lh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lh[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.lh);
-        drawLimb(cx, armStartY, cx + poseData.rh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rh[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.rh);
-        drawLimb(cx, legStartY, cx + poseData.lf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lf[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.lf);
-        drawLimb(cx, legStartY, cx + poseData.rf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rf[1]*POSE_SCALE*LIMB_STRETCH, hitStatus.rf);
+        const torsoTop = cy - 80; const torsoBot = cy + 60;
 
-        ctx.restore();
-    }
+        // 畫軀幹與雙腿
+        drawCapsule(cx, torsoTop, cx, torsoBot, 70); 
+        drawCapsule(cx - 25, torsoBot, cx - 35, cy + 170, 40); 
+        drawCapsule(cx - 35, cy + 170, cx - 40, cy + 260, 30); 
+        drawCapsule(cx + 25, torsoBot, cx + 35, cy + 170, 40); 
+        drawCapsule(cx + 35, cy + 170, cx + 40, cy + 260, 30); 
 
-    // 核心數學：計算點到線段的最短距離
-    function distToSegmentSquared(p, v, w) {
-        var l2 = (v.x - w.x)*(v.x - w.x) + (v.y - w.y)*(v.y - w.y);
-        if (l2 == 0) return (p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y);
-        var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
-        t = Math.max(0, Math.min(1, t));
-        return (p.x - (v.x + t * (w.x - v.x)))*(p.x - (v.x + t * (w.x - v.x))) +
-               (p.y - (v.y + t * (w.y - v.y)))*(p.y - (v.y + t * (w.y - v.y)));
-    }
-    function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
+        // 畫頭部
+        const headY = torsoTop - 65;
+        ctx.beginPath(); ctx.arc(cx, headY, 40, 0, Math.PI * 2);
+        ctx.fillStyle = bodyColor; ctx.fill();
+        ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.stroke();
 
-    function updateHitStatus(landmarks, poseData, cx, waistY, w, h) {
-        if (!poseData || !landmarks) return { lh: false, rh: false, lf: false, rf: false };
-        let status = { lh: false, rh: false, lf: false, rf: false };
-        
-        // 配合變細的四肢，將寬容度微調成最舒適的 65 (乘上 SCALE)
-        const THRESHOLD = 65 * POSE_SCALE; 
-        
-        const armStartY = waistY - 50 * POSE_SCALE;
-        const legStartY = waistY + 20 * POSE_SCALE;
+        // 🌱 專屬彩蛋：頭頂兩片小嫩葉
+        ctx.beginPath();
+        ctx.moveTo(cx, headY - 40);
+        ctx.quadraticCurveTo(cx - 25, headY - 70, cx - 10, headY - 80);
+        ctx.quadraticCurveTo(cx, headY - 60, cx, headY - 40);
+        ctx.moveTo(cx, headY - 40);
+        ctx.quadraticCurveTo(cx + 25, headY - 70, cx + 10, headY - 80);
+        ctx.quadraticCurveTo(cx, headY - 60, cx, headY - 40);
+        ctx.fillStyle = isMatched ? '#00ff88' : '#00ffaa';
+        ctx.fill();
 
-        const checkLimb = (lmId, startX, startY, endX, endY) => {
-            const lm = landmarks[lmId];
-            if(!lm) return false;
-            const p = {x: lm.x * w, y: lm.y * h};
-            const v = {x: startX, y: startY};
-            const targetW = {x: endX, y: endY};
-            return distToSegment(p, v, targetW) <= THRESHOLD;
+        ctx.shadowBlur = isMatched ? 40 : 20;
+
+        // 利用 index 分類，繪製幾個代表性的手部動作作為視覺輔助
+        if (currentPoseData.name.includes("V-Shape") || currentPoseData.name.includes("大字")) {
+            drawCapsule(cx - 35, torsoTop, cx - 110, cy - 150, 35); drawCapsule(cx - 110, cy - 150, cx - 150, cy - 230, 25); 
+            drawCapsule(cx + 35, torsoTop, cx + 110, cy - 150, 35); drawCapsule(cx + 110, cy - 150, cx + 150, cy - 230, 25); 
+        } else if (currentPoseData.name.includes("T-Pose") || currentPoseData.name.includes("殭屍")) {
+            drawCapsule(cx - 35, torsoTop, cx - 130, torsoTop, 35); drawCapsule(cx - 130, torsoTop, cx - 210, torsoTop, 25); 
+            drawCapsule(cx + 35, torsoTop, cx + 130, torsoTop, 35); drawCapsule(cx + 130, torsoTop, cx + 210, torsoTop, 25); 
+        } else if (currentPoseData.name.includes("舉左手") || currentPoseData.name.includes("週末夜")) {
+            drawCapsule(cx - 35, torsoTop, cx - 110, cy - 150, 35); drawCapsule(cx - 110, cy - 150, cx - 150, cy - 230, 25); 
+            drawCapsule(cx + 35, torsoTop, cx + 70, cy + 10, 35); drawCapsule(cx + 70, cy + 10, cx + 60, cy + 100, 25); 
+        } else {
+            // 通用待機防禦動作
+            drawCapsule(cx - 35, torsoTop, cx - 80, cy - 20, 35); drawCapsule(cx - 80, cy - 20, cx - 40, cy - 50, 25); 
+            drawCapsule(cx + 35, torsoTop, cx + 80, cy - 20, 35); drawCapsule(cx + 80, cy - 20, cx + 40, cy - 50, 25); 
         }
-
-        // 同樣將目標點的長度乘上 LIMB_STRETCH
-        status.lh = checkLimb(15, cx, armStartY, cx + poseData.lh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lh[1]*POSE_SCALE*LIMB_STRETCH);
-        status.rh = checkLimb(16, cx, armStartY, cx + poseData.rh[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rh[1]*POSE_SCALE*LIMB_STRETCH);
-        status.lf = checkLimb(27, cx, legStartY, cx + poseData.lf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.lf[1]*POSE_SCALE*LIMB_STRETCH);
-        status.rf = checkLimb(28, cx, legStartY, cx + poseData.rf[0]*POSE_SCALE*LIMB_STRETCH, waistY + poseData.rf[1]*POSE_SCALE*LIMB_STRETCH);
-
-        return status;
+        ctx.restore();
     }
 
     function onResults(results) {
@@ -344,31 +320,30 @@
         canvasElement.height = videoElement.videoHeight;
         const w = canvasElement.width;
         const h = canvasElement.height;
-        const cx = w / 2;
-        
-        // 🌟 【貼地修正】：因為腳伸長了，為了不讓腳超出版面，
-        // 腳底的基準 Y 座標也要乘上 LIMB_STRETCH，確保人物的腳剛好落在畫面底端
-        const waistY = h - (160 * POSE_SCALE * LIMB_STRETCH) - 20;
 
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, w, h);
         canvasCtx.drawImage(results.image, 0, 0, w, h);
 
+        let isMatched = false;
+
+        // 🌟 最核心的姿態比對邏輯 (Relative Check)
         if (results.poseLandmarks && isGameRunning && !isTransitioning) {
-            currentHitStatus = updateHitStatus(results.poseLandmarks, currentPoseData, cx, waistY, w, h);
-            
-            let allHit = currentHitStatus.lh && currentHitStatus.rh && currentHitStatus.lf && currentHitStatus.rf;
-            if (allHit) {
+            if (currentPoseData && currentPoseData.check(results.poseLandmarks)) {
+                isMatched = true;
                 handleStageResult(true); 
             }
         }
 
+        // 繪製帶有嫩葉的小豆芽全息替身
         if (currentPoseData) {
-            drawSolidSilhouette(canvasCtx, cx, waistY, currentPoseData, currentHitStatus);
+            drawHologramAvatar(canvasCtx, isMatched);
         }
 
+        // 繪製玩家的科技感骨架
         if (results.poseLandmarks) {
-            drawLandmarks(canvasCtx, results.poseLandmarks, {color: 'rgba(255, 255, 255, 0.5)', fillColor: '#00f0ff', lineWidth: 1, radius: 3});
+            drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: 'rgba(255, 255, 255, 0.4)', lineWidth: 3});
+            drawLandmarks(canvasCtx, results.poseLandmarks, {color: 'white', fillColor: '#00f0ff', lineWidth: 1, radius: 4});
         }
         canvasCtx.restore();
     }
