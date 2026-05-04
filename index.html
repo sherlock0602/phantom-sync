@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>幻影同步：極速穿牆版 (大範圍呼吸光圈) 🌱</title>
+    <title>幻影同步：歡樂跳躍版 🌱</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -77,11 +77,11 @@
     <div class="float-text" id="float-text">PERFECT!</div>
 
     <div class="glass-panel" id="game-ui">
-        <div class="ui-header"><span>🌱</span> HOLE IN THE WALL</div>
+        <div class="ui-header"><span>🌱</span> 躲貓貓大挑戰</div>
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
             <div>
                 <div class="ui-label">STAGE</div>
-                <div class="ui-value"><span id="stage-num">1</span>/<span id="max-stage-num">10</span></div>
+                <div class="ui-value"><span id="stage-num">1</span>/<span id="max-stage-num">5</span></div>
             </div>
             <div style="text-align: center;">
                 <div class="ui-label">SCORE</div>
@@ -103,7 +103,7 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">極速穿牆模式</span></div>
+        <div class="big-text">PHANTOM SYNC<br><span style="font-size: 24px; color: #00ff88;">跳躍躲貓貓模式</span></div>
         <button class="start-btn" onclick="startGame()">LINK START</button>
     </div>
 
@@ -131,80 +131,73 @@
     const resultOverlay = document.getElementById('result-overlay');
     const flashLayer = document.getElementById('flash-layer');
 
-    const MAX_STAGES = 10;
+    const MAX_STAGES = 5;
     let totalScore = 0;
     let currentStage = 1;
     let isGameRunning = false;
     let isTransitioning = false;
     let timeLeft = 6000; 
     let timerInterval;
-    
-    // 🌟 【超級寬容度升級】從原本的 100px 直接加倍到 200px！
-    // 只要手腳進到這個半徑 200px 的範圍內就直接算命中！
-    const HIT_TOLERANCE = 200; 
 
+    // 🌟 全新動作庫設計：保證有手有腳，加入跳躍，且絕對不貼齊底部！
+    // 參數說明：lh(左手), rh(右手), lf(左腳), rf(右腳) 
+    // r 是感應泡泡的半徑 (寬容度高達 80)
+    // 腳步(lf, rf) 的 Y 軸設定得比較小，保證整個動作浮在半空中！
     const poses = [
         {
-            name: "V字勝利",
-            lines: [[-50,-50, -120,-160], [50,-50, 120,-160], [-30,80, -40,240], [30,80, 40,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: -120, y: -160}, {id: 16, x: 120, y: -160}, {id: 27, x: -40, y: 240}, {id: 28, x: 40, y: 240}]
+            name: "大字空中跳 🌟",
+            zones: {
+                lh: {x: -160, y: -120, r: 80, id: 15},
+                rh: {x: 160, y: -120, r: 80, id: 16},
+                lf: {x: -120, y: 120, r: 80, id: 27},
+                rf: {x: 120, y: 120, r: 80, id: 28}
+            }
         },
         {
-            name: "十字平舉",
-            lines: [[-50,-50, -180,-50], [50,-50, 180,-50], [-30,80, -40,240], [30,80, 40,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: -180, y: -50}, {id: 16, x: 180, y: -50}, {id: 27, x: -40, y: 240}, {id: 28, x: 40, y: 240}]
+            name: "超級瑪利歐 🍄",
+            zones: {
+                lh: {x: -100, y: -160, r: 80, id: 15}, // 左手往上衝
+                rh: {x: 120, y: 0, r: 80, id: 16},     // 右手擺旁邊
+                lf: {x: -60, y: 140, r: 80, id: 27},   // 左腳直放
+                rf: {x: 100, y: 20, r: 80, id: 28}     // 右腳大彎曲跳躍！
+            }
         },
         {
-            name: "大字爆開",
-            lines: [[-50,-50, -160,-120], [50,-50, 160,-120], [-30,80, -120,240], [30,80, 120,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: -160, y: -120}, {id: 16, x: 160, y: -120}, {id: 27, x: -120, y: 240}, {id: 28, x: 120, y: 240}]
+            name: "水母縮球跳 🪼",
+            zones: {
+                lh: {x: -60, y: -20, r: 80, id: 15}, // 雙手夾緊
+                rh: {x: 60, y: -20, r: 80, id: 16},
+                lf: {x: -50, y: 60, r: 80, id: 27},  // 雙腳縮起來跳
+                rf: {x: 50, y: 60, r: 80, id: 28}
+            }
         },
         {
-            name: "單手高舉",
-            lines: [[-50,-50, -120,-160], [50,-50, 80,100], [-30,80, -40,240], [30,80, 40,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: -120, y: -160}, {id: 16, x: 80, y: 100}, {id: 27, x: -40, y: 240}, {id: 28, x: 40, y: 240}]
+            name: "啦啦隊側飛 🎀",
+            zones: {
+                lh: {x: -140, y: -100, r: 80, id: 15}, // 手往左上
+                rh: {x: -60, y: -140, r: 80, id: 16},
+                lf: {x: 80, y: 40, r: 80, id: 27},     // 腳往右邊縮
+                rf: {x: 160, y: 40, r: 80, id: 28}
+            }
         },
         {
-            name: "週末夜狂熱",
-            lines: [[-50,-50, -120,-160], [50,-50, 120,50], [-30,80, -80,240], [30,80, 40,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: -120, y: -160}, {id: 16, x: 120, y: 50}, {id: 27, x: -80, y: 240}, {id: 28, x: 40, y: 240}]
-        },
-        {
-            name: "金雞獨立",
-            lines: [[-50,-50, -160,-50], [50,-50, 160,-50], [-30,80, -30,240], [30,80, 80,140], [0,-100, 0,80]],
-            targets: [{id: 15, x: -160, y: -50}, {id: 16, x: 160, y: -50}, {id: 27, x: -30, y: 240}, {id: 28, x: 80, y: 140}]
-        },
-        {
-            name: "瓦干達萬歲",
-            lines: [[-50,-50, 40,-50], [50,-50, -40,-50], [-30,80, -40,240], [30,80, 40,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: 40, y: -50}, {id: 16, x: -40, y: -50}] 
-        },
-        {
-            name: "芭蕾天鵝",
-            lines: [[-50,-50, 0,-180], [50,-50, 0,-180], [-30,80, -20,240], [30,80, 20,240], [0,-100, 0,80]],
-            targets: [{id: 15, x: 0, y: -180}, {id: 16, x: 0, y: -180}]
-        },
-        {
-            name: "投降啦",
-            lines: [[-50,-50, -120,-50], [-120,-50, -120,-150], [50,-50, 120,-50], [120,-50, 120,-150], [0,-100, 0,80]],
-            targets: [{id: 15, x: -120, y: -150}, {id: 16, x: 120, y: -150}]
-        },
-        {
-            name: "雙手抱頭",
-            lines: [[-50,-50, -100,-100], [-100,-100, -30,-140], [50,-50, 100,-100], [100,-100, 30,-140], [0,-100, 0,80]],
-            targets: [{id: 15, x: -30, y: -140}, {id: 16, x: 30, y: -140}]
+            name: "殭屍前跳 🧟",
+            zones: {
+                lh: {x: -80, y: -40, r: 80, id: 15}, // 雙手平舉
+                rh: {x: 80, y: -40, r: 80, id: 16},
+                lf: {x: -40, y: 80, r: 80, id: 27},  // 雙腳併攏跳
+                rf: {x: 40, y: 80, r: 80, id: 28}
+            }
         }
     ];
 
     let currentPoseData = null;
+    // 記錄四個肢體的命中狀態
+    let currentHitStatus = { lh: false, rh: false, lf: false, rf: false };
 
     function startGame() {
-        flashLayer.classList.remove('system-start-flash');
-        void flashLayer.offsetWidth; 
-        flashLayer.classList.add('system-start-flash');
-        startOverlay.classList.add('hidden');
-        resultOverlay.classList.add('hidden');
-        
+        flashLayer.classList.remove('system-start-flash'); void flashLayer.offsetWidth; flashLayer.classList.add('system-start-flash');
+        startOverlay.classList.add('hidden'); resultOverlay.classList.add('hidden');
         totalScore = 0; currentStage = 1; updateScoreUI();
         loadStage(currentStage);
     }
@@ -212,41 +205,31 @@
     function updateScoreUI() { scoreText.innerText = totalScore; }
 
     function loadStage(stage) {
-        isGameRunning = false;
-        isTransitioning = true; 
-        stageNumText.innerText = stage;
-        timeLeft = 6000;
-        updateTimerUI();
+        isGameRunning = false; isTransitioning = true; 
+        stageNumText.innerText = stage; timeLeft = 6000; updateTimerUI();
         
         currentPoseData = poses[Math.floor(Math.random() * poses.length)];
         poseNameDisplay.innerText = currentPoseData.name;
         
-        syncStatus.innerText = "準備進入剪影...";
+        // 狀態重置
+        currentHitStatus = { lh: false, rh: false, lf: false, rf: false };
+        syncStatus.innerText = "把手腳塞進泡泡裡！";
         syncStatus.style.color = "white";
         uiPanel.style.borderColor = "rgba(255, 255, 255, 0.1)";
         uiPanel.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.5)";
         
-        setTimeout(() => {
-            isTransitioning = false;
-            isGameRunning = true;
-            startTimer();
-        }, 1500); 
+        setTimeout(() => { isTransitioning = false; isGameRunning = true; startTimer(); }, 1500); 
     }
 
     function startTimer() {
         clearInterval(timerInterval);
         const startTime = Date.now();
         const totalDuration = timeLeft;
-
         timerInterval = setInterval(() => {
             if(!isGameRunning) return;
             const elapsed = Date.now() - startTime;
             timeLeft = totalDuration - elapsed;
-
-            if (timeLeft <= 0) {
-                timeLeft = 0;
-                handleStageResult(false); 
-            }
+            if (timeLeft <= 0) { timeLeft = 0; handleStageResult(false); }
             updateTimerUI();
         }, 50); 
     }
@@ -260,117 +243,111 @@
     }
 
     function handleStageResult(isSuccess) {
-        isGameRunning = false;
-        isTransitioning = true;
-        clearInterval(timerInterval);
-
+        isGameRunning = false; isTransitioning = true; clearInterval(timerInterval);
         if (isSuccess) {
             totalScore += 100;
             showFloatText("PERFECT!", "var(--success-glow)");
             uiPanel.style.borderColor = "var(--success-glow)";
             uiPanel.style.boxShadow = "0 0 30px var(--success-glow)";
+            syncStatus.innerText = "全部命中！";
+            syncStatus.style.color = "var(--success-glow)";
         } else {
             totalScore -= 50;
             showFloatText("TIME OUT", "var(--fail-glow)");
             uiPanel.style.borderColor = "var(--fail-glow)";
         }
-        
         updateScoreUI();
-
         if (currentStage >= MAX_STAGES) {
             setTimeout(showFinalResult, 1000);
         } else {
-            currentStage++;
-            setTimeout(() => loadStage(currentStage), 800); 
+            currentStage++; setTimeout(() => loadStage(currentStage), 800); 
         }
     }
 
     function showFloatText(msg, color) {
-        floatText.innerText = msg; floatText.style.color = color;
-        floatText.style.textShadow = `0 0 40px ${color}`;
-        floatText.classList.remove('float-active'); void floatText.offsetWidth;
-        floatText.classList.add('float-active');
+        floatText.innerText = msg; floatText.style.color = color; floatText.style.textShadow = `0 0 40px ${color}`;
+        floatText.classList.remove('float-active'); void floatText.offsetWidth; floatText.classList.add('float-active');
         setTimeout(() => floatText.classList.remove('float-active'), 800);
     }
 
     function showFinalResult() {
         resultOverlay.classList.remove('hidden');
-        let rank = totalScore === MAX_STAGES * 100 ? "<span style='color:#ffd700'>S 級：姿態之神！</span>" :
+        let rank = totalScore === MAX_STAGES * 100 ? "<span style='color:#ffd700'>S 級：跳躍精靈！</span>" :
                    totalScore > 0 ? "<span style='color:#00ff88'>A 級：身手矯健！</span>" :
-                   "<span style='color:#ff4444'>C 級：多做運動啦！</span>";
-
+                   "<span style='color:#ff4444'>C 級：多跳幾次啦！</span>";
         document.getElementById('result-text').innerHTML = `TRAINING COMPLETE<br><br><span style="font-size: 32px; color: #a0aec0;">最終得分</span><br><span style="font-size: 80px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.8);">${totalScore}</span><br><br><span style="font-size: 24px;">${rank}</span>`;
     }
 
-    function drawWideSilhouette(ctx, cx, cy, poseData, isMatched) {
+    // 🌟 全新超直覺【實體人形剪影】渲染
+    function drawSolidSilhouette(ctx, cx, cy, poseData, hitStatus) {
         if (!poseData) return;
-        
         ctx.save();
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         
-        const mainColor = isMatched ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 240, 255, 0.4)';
-        const glowColor = isMatched ? '#00ff88' : '#00f0ff';
+        let allHit = hitStatus.lh && hitStatus.rh && hitStatus.lf && hitStatus.rf;
+        const bodyColor = allHit ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 240, 255, 0.4)';
+        
+        ctx.shadowColor = allHit ? '#00ff88' : '#00f0ff';
+        ctx.shadowBlur = 20;
 
-        ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 30;
-
+        // 畫出「超粗壯」的人體主幹
         ctx.beginPath();
-        poseData.lines.forEach(line => {
-            ctx.moveTo(cx + line[0], cy + line[1]);
-            ctx.lineTo(cx + line[2], cy + line[3]);
-        });
-        // 剪影依然保持寬厚，讓玩家有塞進牆壁的感覺
-        ctx.lineWidth = 140; 
-        ctx.strokeStyle = mainColor;
-        ctx.stroke();
-
-        ctx.lineWidth = 20;
-        ctx.strokeStyle = `rgba(255, 255, 255, 0.6)`;
-        ctx.stroke();
+        ctx.arc(cx, cy - 80, 50, 0, Math.PI*2); // 頭
+        ctx.moveTo(cx, cy - 30); ctx.lineTo(cx, cy + 50); // 身體
+        ctx.moveTo(cx, cy - 30); ctx.lineTo(cx + poseData.zones.lh.x, cy + poseData.zones.lh.y); // 左手
+        ctx.moveTo(cx, cy - 30); ctx.lineTo(cx + poseData.zones.rh.x, cy + poseData.zones.rh.y); // 右手
+        ctx.moveTo(cx, cy + 50); ctx.lineTo(cx + poseData.zones.lf.x, cy + poseData.zones.lf.y); // 左腳
+        ctx.moveTo(cx, cy + 50); ctx.lineTo(cx + poseData.zones.rf.x, cy + poseData.zones.rf.y); // 右腳
         
-        // 🌟 【超吸睛：動態呼吸光圈】
-        // 利用時間戳記來製作呼吸效果，並且光圈大小完美對應 HIT_TOLERANCE
-        const time = Date.now() / 150;
-        const pulseRadius = HIT_TOLERANCE + Math.sin(time) * 15; 
+        ctx.lineWidth = 120; // 這是真的有厚度的人形！
+        ctx.strokeStyle = bodyColor;
+        ctx.stroke();
 
-        poseData.targets.forEach(t => {
+        // 中間畫白線骨架輔助
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.stroke();
+
+        // 🌟 畫出四個肢體的「判定泡泡」
+        // 當肢體伸進去時，該泡泡會單獨亮起綠燈！
+        const keys = ['lh', 'rh', 'lf', 'rf'];
+        keys.forEach(k => {
+            const z = poseData.zones[k];
+            const isHit = hitStatus[k];
             ctx.beginPath();
-            // 畫出對應感應範圍的超級大泡泡
-            ctx.arc(cx + t.x, cy + t.y, pulseRadius, 0, Math.PI * 2);
-            ctx.fillStyle = isMatched ? 'rgba(0, 255, 136, 0.3)' : 'rgba(255, 255, 0, 0.15)';
+            ctx.arc(cx + z.x, cy + z.y, z.r, 0, Math.PI*2);
+            ctx.fillStyle = isHit ? 'rgba(0, 255, 136, 0.6)' : 'rgba(255, 255, 0, 0.2)';
             ctx.fill();
             
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = isMatched ? 'rgba(0, 255, 136, 0.8)' : 'rgba(255, 255, 0, 0.5)';
-            // 加上虛線效果看起來更有科幻雷達感
-            ctx.setLineDash([15, 10]); 
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = isHit ? '#00ff88' : '#ffff00';
+            ctx.setLineDash([10, 10]);
             ctx.stroke();
-            ctx.setLineDash([]); // 恢復實線
+            ctx.setLineDash([]);
         });
 
         ctx.restore();
     }
 
-    function checkSilhouetteHit(landmarks, poseData, cx, cy, w, h) {
-        if (!poseData || !landmarks) return false;
+    // 🌟 單獨判定四個肢體
+    function updateHitStatus(landmarks, poseData, cx, cy, w, h) {
+        if (!poseData || !landmarks) return { lh: false, rh: false, lf: false, rf: false };
+        let status = { lh: false, rh: false, lf: false, rf: false };
         
-        for (let t of poseData.targets) {
-            const lm = landmarks[t.id];
-            if (!lm) return false;
-            
-            const px = lm.x * w; 
-            const py = lm.y * h;
-            const tx = cx + t.x;
-            const ty = cy + t.y;
-
-            const dist = Math.hypot(px - tx, py - ty);
-            
-            if (dist > HIT_TOLERANCE) {
-                return false;
+        const keys = ['lh', 'rh', 'lf', 'rf'];
+        keys.forEach(k => {
+            const z = poseData.zones[k];
+            const lm = landmarks[z.id];
+            if (lm) {
+                const px = lm.x * w; 
+                const py = lm.y * h;
+                const dist = Math.hypot(px - (cx + z.x), py - (cy + z.y));
+                if (dist <= z.r) {
+                    status[k] = true; // 只要進入這顆泡泡的半徑內就算命中！
+                }
             }
-        }
-        return true; 
+        });
+        return status;
     }
 
     function onResults(results) {
@@ -379,30 +356,28 @@
         const w = canvasElement.width;
         const h = canvasElement.height;
         const cx = w / 2;
-        const cy = h / 2 + 50; 
+        
+        // 🌟 【解決平板視角問題】：將整個剪影的重心大幅往上提！
+        // 把 cy 改成 h / 2 - 50，這樣即使腳往下伸，也不會超出螢幕下緣
+        const cy = h / 2 - 50; 
 
         canvasCtx.save();
         canvasCtx.clearRect(0, 0, w, h);
-        
         canvasCtx.drawImage(results.image, 0, 0, w, h);
 
-        let isMatched = false;
-
         if (results.poseLandmarks && isGameRunning && !isTransitioning) {
-            isMatched = checkSilhouetteHit(results.poseLandmarks, currentPoseData, cx, cy, w, h);
+            // 更新四個點的命中狀態
+            currentHitStatus = updateHitStatus(results.poseLandmarks, currentPoseData, cx, cy, w, h);
             
-            if (isMatched) {
-                syncStatus.innerText = "SYNC COMPLETE!";
-                syncStatus.style.color = "var(--success-glow)";
+            // 只要四個點都是 true (綠燈)，立刻過關！
+            let allHit = currentHitStatus.lh && currentHitStatus.rh && currentHitStatus.lf && currentHitStatus.rf;
+            if (allHit) {
                 handleStageResult(true); 
-            } else {
-                syncStatus.innerText = "ALIGNING...";
-                syncStatus.style.color = "white";
             }
         }
 
         if (currentPoseData) {
-            drawWideSilhouette(canvasCtx, cx, cy, currentPoseData, isMatched);
+            drawSolidSilhouette(canvasCtx, cx, cy, currentPoseData, currentHitStatus);
         }
 
         if (results.poseLandmarks) {
