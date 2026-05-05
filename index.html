@@ -143,7 +143,8 @@
     const poses = [
         { name: "V-Shape (高舉雙手)", check: (lm) => lm[15].y < lm[11].y && lm[16].y < lm[12].y && lm[15].y < lm[13].y && lm[16].y < lm[14].y },
         { name: "T-Pose (平舉雙手)", check: (lm) => Math.abs(lm[15].y - lm[11].y) < 0.15 && Math.abs(lm[16].y - lm[12].y) < 0.15 },
-        { name: "One-Hand High (舉左手)", check: (lm) => lm[15].y < lm[11].y && lm[16].y > lm[12].y },
+        // 🌟 修復核心：單手高舉！不分左右，只要一手高過鼻子，另一手低於肩膀就過關！
+        { name: "單手高舉 (Raise One Hand)", check: (lm) => (lm[15].y < lm[0].y && lm[16].y > lm[12].y) || (lm[16].y < lm[0].y && lm[15].y > lm[11].y) },
         
         // 交叉防禦：雙手距離小於「肩膀寬度的 80%」
         { name: "交叉防禦 (Wakanda!)", check: (lm) => Math.abs(lm[15].x - lm[16].x) < Math.abs(lm[11].x - lm[12].x) * 0.8 && lm[15].y > lm[0].y && lm[15].y < lm[23].y },
